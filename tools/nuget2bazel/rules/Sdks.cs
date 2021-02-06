@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection.Metadata.Ecma335;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -31,6 +32,20 @@ namespace nuget2bazel.rules
         public bool DefaultSdk { get; set; }
 
         public abstract Task<List<RefInfo>> GetRefInfos(string configDir);
+
+        public string GetDownloadUrl()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                return LinuxUrl;
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                return DarwinUrl;
+            }
+
+            return WindowsUrl;
+        }
     }
 
     public static class SdkInfos
@@ -71,6 +86,12 @@ namespace nuget2bazel.rules
                 "https://download.visualstudio.microsoft.com/download/pr/28a2c4ff-6154-473b-bd51-c62c76171551/ea47eab2219f323596c039b3b679c3d6/dotnet-sdk-3.1.100-win-x64.zip",
                 "https://download.visualstudio.microsoft.com/download/pr/d731f991-8e68-4c7c-8ea0-fad5605b077a/49497b5420eecbd905158d86d738af64/dotnet-sdk-3.1.100-linux-x64.tar.gz",
                 "https://download.visualstudio.microsoft.com/download/pr/bea99127-a762-4f9e-aac8-542ad8aa9a94/afb5af074b879303b19c6069e9e8d75f/dotnet-sdk-3.1.100-osx-x64.tar.gz",
+                new[] { "Microsoft.NETCore.App.Ref", "Microsoft.AspNetCore.App.Ref", "NETStandard.Library.Ref" }
+            ),
+            new SdkCorePost3("5.0.2", "v5.0.102",
+                "https://download.visualstudio.microsoft.com/download/pr/8773ea25-70e8-47da-b46f-8b060f696dd6/1976c9d35ac773539c7064b39bb99b11/dotnet-sdk-5.0.102-win-x64.zip",
+                "https://download.visualstudio.microsoft.com/download/pr/7f736160-9f34-4595-8d72-13630c437aef/b9c4513afb0f8872eb95793c70ac52f6/dotnet-sdk-5.0.102-linux-x64.tar.gz",
+                "https://download.visualstudio.microsoft.com/download/pr/1610d52e-df25-496d-ad60-fab11f4cdd40/73411a5ab50060a914bf71c044a7e4ea/dotnet-sdk-5.0.102-osx-x64.tar.gz",
                 new[] { "Microsoft.NETCore.App.Ref", "Microsoft.AspNetCore.App.Ref", "NETStandard.Library.Ref" },
                 true
             )

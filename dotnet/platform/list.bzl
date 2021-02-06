@@ -44,7 +44,8 @@ DOTNET_CORE_FRAMEWORKS = {
     "v2.2.402": (".NETCore,Version=v2.2", "NETCOREAPP2_2", "netcoreapp2.2", "2.2.7"),
     "v3.0.100": (".NETCore,Version=v3.0", "NETCOREAPP3_0", "netcoreapp3.0", "3.0.0"),
     "v3.1.100": (".NETCore,Version=v3.1", "NETCOREAPP3_1", "netcoreapp3.1", "3.1.0"),
+    "v5.0.102": (".NETCore,Version=v5.0", "NET5_0", "net5.0", "5.0.2"),
 }
-DOTNET_CORE_NAMES = ["netcoreapp2.0", "netcoreapp2.1", "netcoreapp2.2", "netcoreapp3.0", "netcoreapp3.1"] + DOTNET_NETSTANDARD.keys()
+DOTNET_CORE_NAMES = ["netcoreapp2.0", "netcoreapp2.1", "netcoreapp2.2", "netcoreapp3.0", "netcoreapp3.1", "net5.0"] + DOTNET_NETSTANDARD.keys()
 
-DEFAULT_DOTNET_CORE_FRAMEWORK = "v3.1.100"
+DEFAULT_DOTNET_CORE_FRAMEWORK = "v5.0.102"

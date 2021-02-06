@@ -19,7 +19,7 @@ namespace nuget2bazel.rules
         public override async Task<List<RefInfo>> GetRefInfos(string configDir)
         {
             var package = await PackageDownloader.DownloadPackageIfNedeed(configDir, "Microsoft.NETCore.App", InternalVersionFolder);
-            var sdkDir = await ZipDownloader.DownloadIfNedeed(configDir, WindowsUrl);
+            var sdkDir = await ZipDownloader.DownloadIfNedeed(configDir, GetDownloadUrl());
 
             var brokenDependencies = new string[] { "netstandard" };
 
@@ -93,7 +93,7 @@ namespace nuget2bazel.rules
 
         protected async Task<List<RefInfo>> GetRefInfosImpl(string configDir, string pack)
         {
-            var sdk = await ZipDownloader.DownloadIfNedeed(configDir, WindowsUrl);
+            var sdk = await ZipDownloader.DownloadIfNedeed(configDir, GetDownloadUrl());
 
             var brokenDependencies = new[] { "system.printing", "presentationframework" };
 

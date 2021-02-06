@@ -13,7 +13,7 @@ load(
     "DOTNETOS",
 )
 
-CORE_DEFAULT_VERSION = "v3.1.100"
+CORE_DEFAULT_VERSION = "v5.0.102"
 
 CORE_SDK_REPOSITORIES = {
     "v2.1.200": {
@@ -121,6 +121,29 @@ CORE_SDK_REPOSITORIES = {
             "b38e6f8935d4b82b283d85c6b83cd24b5253730bab97e0e5e6f4c43e2b741aab",
             # SHA512 Checsum provided
             # "142922cfb98b0cae6b194c3da2478fdf70f2a67603d248bbf859938bd05c4a4a5facea05d49b0db8b382d8cf73f9a45246a2022c9cf0ccf1501b1138cd0b3e76",
+        ),
+    },
+    "v5.0.102": {
+        # https://dotnet.microsoft.com/download/dotnet-core/thank-you/sdk-5.0.102-windows-x64-binaries
+        "core_windows_amd64": (
+            "https://download.visualstudio.microsoft.com/download/pr/8773ea25-70e8-47da-b46f-8b060f696dd6/1976c9d35ac773539c7064b39bb99b11/dotnet-sdk-5.0.102-win-x64.zip",
+            "3e23529baf9463c6ac1094df8248c354cd5972f330d2a020b820a50820505b79",
+            # SHA512 Checsum provided
+            # "118056d7c60d9591b0a803fb4f8941b6fa5166553d1deac625279330b05599073231ee4c4ecdc3f179d57261290b6c62ac7f34d5f89c8b06274e2346a069f79b",
+        ),
+        # https://dotnet.microsoft.com/download/dotnet-core/thank-you/sdk-5.0.102-linux-x64-binaries
+        "core_linux_amd64": (
+            "https://download.visualstudio.microsoft.com/download/pr/7f736160-9f34-4595-8d72-13630c437aef/b9c4513afb0f8872eb95793c70ac52f6/dotnet-sdk-5.0.102-linux-x64.tar.gz",
+            "4bb7f951750e87dffdbca5ee21d13b11e2db7f7e37045e84cd6052ff1fadd0aa",
+            # SHA512 Checsum provided
+            # "0ce2d5365ca39808fb71baec4584d4ec786491c3735543dc93244604ea97e242377d0987cd8b1e529258dee68f203b5780559201e7ea6d84487d6d8d433329b3",
+        ),
+        # https://dotnet.microsoft.com/download/dotnet-core/thank-you/sdk-5.0.102-macos-x64-binaries
+        "core_darwin_amd64": (
+            "https://download.visualstudio.microsoft.com/download/pr/1610d52e-df25-496d-ad60-fab11f4cdd40/73411a5ab50060a914bf71c044a7e4ea/dotnet-sdk-5.0.102-osx-x64.tar.gz",
+            "9b5940dcb50152815c165f4d06448d2c4eac1610b71606a5ed1269bdce3d076c",
+            # SHA512 Checsum provided
+            # "7a3678b6b684797011d09447f6d66fbeaa42227cba8266f6a7735752d47a96be8a910fff0463fe8d021e83204f474659f69a6c192bd5f06141699e3417748554",
         ),
     },
 }

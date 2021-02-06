@@ -10,7 +10,7 @@ define_runtime("//:core_context_data")
 
 core_import_binary_internal(
     name = "csc.dll",
-    src = "@core_sdk//:core/sdk/3.1.100/Roslyn/bincore/csc.dll",
+    src = "@core_sdk//:core/sdk/5.0.102/Roslyn/bincore/csc.dll",
     data = ["@core_sdk//:csc_deps"],
-    version = "3.4.0.0",
+    version = "3.8.0.0",
 )
