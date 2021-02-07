@@ -16,3 +16,10 @@ core_import_binary_internal(
     data = ["@core_sdk_{}//:csc_deps".format(framework)],
     version = "3.3.0.0",
 )
+
+core_import_binary_internal(
+    name = "fsc.exe",
+    src = "@core_sdk_{}//:fsharp/fsc.exe".format(framework),
+    data = ["@core_sdk_{}//:fsc_deps".format(framework)],
+    version = "10.6.0.0",
+)

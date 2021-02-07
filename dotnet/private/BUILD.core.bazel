@@ -21,7 +21,6 @@ filegroup(
     ]),
 )
 
-
 filegroup(
     name = "host",
     srcs = glob([
@@ -42,9 +41,20 @@ filegroup(
 
 filegroup(
     name = "csc_deps",
-    srcs = glob(["core/**/bincore/*.dll"], exclude=["core/**/bincore/csc.dll"]),
+    srcs = glob(
+        ["core/**/bincore/*.dll"],
+        exclude = ["core/**/bincore/csc.dll"],
+    ),
 )
 
+filegroup(
+    name = "fsc_deps",
+    srcs = glob(
+        ["fsharp/**/*.dll"],
+    ),
+)
+
+exports_files(glob(["fsharp/**/*"]))
 
 filegroup(
     name = "shared",
@@ -54,4 +64,5 @@ filegroup(
 )
 
 exports_files(glob(["core/shared/**/*"]))
+
 exports_files(glob(["core/**/bincore/csc.dll"]))

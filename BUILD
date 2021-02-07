@@ -15,6 +15,7 @@ exports_files(["AUTHORS"])
         name = "core_context_data_" + framework,
         csc = "@io_bazel_rules_dotnet//dotnet/stdlib.core/{}:csc.dll".format(framework),
         framework = framework,
+        fsc = "@io_bazel_rules_dotnet//dotnet/stdlib.core/{}:fsc.exe".format(framework),
         libVersion = DOTNET_CORE_FRAMEWORKS[framework][1],
         runner = "@core_sdk_{}//:runner".format(framework),
         runtime = "@io_bazel_rules_dotnet//dotnet/stdlib.core/{}:runtime".format(framework),

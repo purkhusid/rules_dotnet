@@ -50,7 +50,7 @@ This builds an executable from a set of source files.
 | <a id="core_binary-nowarn"></a>nowarn |  The list of warnings to be ignored. The warnings are passed to -nowarn compiler opion.   | List of strings | optional | [] |
 | <a id="core_binary-out"></a>out |  An alternative name of the output file.   | String | optional | "" |
 | <a id="core_binary-resources"></a>resources |  The list of resources to compile with. Usually provided via reference to [core_resx](api.md#core_resx) or the rules compatible with [DotnetResourceInfo](api.md#dotnetresourceinfo) provider.   | <a href="https://bazel.build/docs/build-ref.html#labels">List of labels</a> | optional | [] |
-| <a id="core_binary-srcs"></a>srcs |  The list of .cs source files that are compiled to create the assembly.   | <a href="https://bazel.build/docs/build-ref.html#labels">List of labels</a> | optional | [] |
+| <a id="core_binary-srcs"></a>srcs |  The list of .cs/.fs source files that are compiled to create the assembly.   | <a href="https://bazel.build/docs/build-ref.html#labels">List of labels</a> | optional | [] |
 | <a id="core_binary-target_framework"></a>target_framework |  Target framework.   | String | optional | "" |
 | <a id="core_binary-unsafe"></a>unsafe |  If true passes /unsafe flag to the compiler.   | Boolean | optional | False |
 | <a id="core_binary-version"></a>version |  Version to be set for the assembly. The version is set by compiling in [AssemblyVersion](https://docs.microsoft.com/en-us/troubleshoot/visualstudio/general/assembly-version-assembly-file-version) attribute.   | String | optional | "" |
@@ -237,7 +237,7 @@ This builds a dotnet assembly from a set of source files.
 | <a id="core_library-nowarn"></a>nowarn |  The list of warnings to be ignored. The warnings are passed to -nowarn compiler opion.   | List of strings | optional | [] |
 | <a id="core_library-out"></a>out |  An alternative name of the output file.   | String | optional | "" |
 | <a id="core_library-resources"></a>resources |  The list of resources to compile with. Usually provided via reference to [core_resx](api.md#core_resx) or the rules compatible with [DotnetResourceInfo](api.md#dotnetresourceinfo) provider.   | <a href="https://bazel.build/docs/build-ref.html#labels">List of labels</a> | optional | [] |
-| <a id="core_library-srcs"></a>srcs |  The list of .cs source files that are compiled to create the assembly.   | <a href="https://bazel.build/docs/build-ref.html#labels">List of labels</a> | optional | [] |
+| <a id="core_library-srcs"></a>srcs |  The list of .cs/.fs source files that are compiled to create the assembly.   | <a href="https://bazel.build/docs/build-ref.html#labels">List of labels</a> | optional | [] |
 | <a id="core_library-target_framework"></a>target_framework |  Target framework.   | String | optional | "" |
 | <a id="core_library-unsafe"></a>unsafe |  If true passes /unsafe flag to the compiler.   | Boolean | optional | False |
 | <a id="core_library-version"></a>version |  Version to be set for the assembly. The version is set by compiling in [AssemblyVersion](https://docs.microsoft.com/en-us/troubleshoot/visualstudio/general/assembly-version-assembly-file-version) attribute.   | String | optional | "" |
@@ -302,7 +302,7 @@ This builds a set of tests that can be run with ``bazel test``.
 | <a id="core_nunit3_test-nowarn"></a>nowarn |  The list of warnings to be ignored. The warnings are passed to -nowarn compiler opion.   | List of strings | optional | [] |
 | <a id="core_nunit3_test-out"></a>out |  An alternative name of the output file.   | String | optional | "" |
 | <a id="core_nunit3_test-resources"></a>resources |  The list of resources to compile with. Usually provided via reference to [core_resx](api.md#core_resx) or the rules compatible with [DotnetResourceInfo](api.md#dotnetresourceinfo) provider.   | <a href="https://bazel.build/docs/build-ref.html#labels">List of labels</a> | optional | [] |
-| <a id="core_nunit3_test-srcs"></a>srcs |  The list of .cs source files that are compiled to create the assembly.   | <a href="https://bazel.build/docs/build-ref.html#labels">List of labels</a> | optional | [] |
+| <a id="core_nunit3_test-srcs"></a>srcs |  The list of .cs/.fs source files that are compiled to create the assembly.   | <a href="https://bazel.build/docs/build-ref.html#labels">List of labels</a> | optional | [] |
 | <a id="core_nunit3_test-testlauncher"></a>testlauncher |  Test launcher to use.   | <a href="https://bazel.build/docs/build-ref.html#labels">Label</a> | optional | @xunit.runner.console//:netcoreapp2.1_core_tool |
 | <a id="core_nunit3_test-unsafe"></a>unsafe |  If true passes /unsafe flag to the compiler.   | Boolean | optional | False |
 | <a id="core_nunit3_test-version"></a>version |  Version to be set for the assembly. The version is set by compiling in [AssemblyVersion](https://docs.microsoft.com/en-us/troubleshoot/visualstudio/general/assembly-version-assembly-file-version) attribute.   | String | optional | "" |
@@ -466,7 +466,7 @@ This builds a set of tests that can be run with ``bazel test``.
 | <a id="core_xunit_test-nowarn"></a>nowarn |  The list of warnings to be ignored. The warnings are passed to -nowarn compiler opion.   | List of strings | optional | [] |
 | <a id="core_xunit_test-out"></a>out |  An alternative name of the output file.   | String | optional | "" |
 | <a id="core_xunit_test-resources"></a>resources |  The list of resources to compile with. Usually provided via reference to [core_resx](api.md#core_resx) or the rules compatible with [DotnetResourceInfo](api.md#dotnetresourceinfo) provider.   | <a href="https://bazel.build/docs/build-ref.html#labels">List of labels</a> | optional | [] |
-| <a id="core_xunit_test-srcs"></a>srcs |  The list of .cs source files that are compiled to create the assembly.   | <a href="https://bazel.build/docs/build-ref.html#labels">List of labels</a> | optional | [] |
+| <a id="core_xunit_test-srcs"></a>srcs |  The list of .cs/.fs source files that are compiled to create the assembly.   | <a href="https://bazel.build/docs/build-ref.html#labels">List of labels</a> | optional | [] |
 | <a id="core_xunit_test-testlauncher"></a>testlauncher |  Test launcher to use.   | <a href="https://bazel.build/docs/build-ref.html#labels">Label</a> | optional | @xunit.runner.console//:netcoreapp2.1_core_tool |
 | <a id="core_xunit_test-unsafe"></a>unsafe |  If true passes /unsafe flag to the compiler.   | Boolean | optional | False |
 | <a id="core_xunit_test-version"></a>version |  Version to be set for the assembly. The version is set by compiling in [AssemblyVersion](https://docs.microsoft.com/en-us/troubleshoot/visualstudio/general/assembly-version-assembly-file-version) attribute.   | String | optional | "" |

@@ -140,6 +140,15 @@ def dotnet_context(ctx):
     Returns:
         DotnetContextInfo: [DotnetContextInfo](api.md#dotnetcontextinfo) provider for ctx rule.
     """
+
+    # Make sure that that there are exlusively .cs or .fs sources in the src attribute
+    extension = ""
+    for f in ctx.files.srcs:
+        if extension == "":
+            extension = f.extension
+        elif extension != f.extension:
+            fail("The srcs attribute can only contain exlusively .cs or .fs files")
+
     attr = ctx.attr
 
     context_data = attr.dotnet_context_data
@@ -238,6 +247,7 @@ core_context_data = rule(
         "runner": attr.label(executable = True, cfg = "host", default = "@core_sdk//:runner"),
         #"csc": attr.label(executable = True, cfg = "host", default = "@core_sdk//:csc"),
         "csc": attr.label(executable = True, cfg = "host", default = "@io_bazel_rules_dotnet//dotnet/stdlib.core:csc.dll"),
+        "fsc": attr.label(executable = True, cfg = "host", default = "@io_bazel_rules_dotnet//dotnet/stdlib.core:fsc.exe"),
     },
     toolchains = ["@io_bazel_rules_dotnet//dotnet:toolchain_type_core"],
 )

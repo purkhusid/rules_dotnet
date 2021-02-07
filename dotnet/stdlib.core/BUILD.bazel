@@ -14,3 +14,10 @@ core_import_binary_internal(
     data = ["@core_sdk//:csc_deps"],
     version = "3.4.0.0",
 )
+
+core_import_binary_internal(
+    name = "fsc.exe",
+    src = "@core_sdk//:fsharp/fsc.exe",
+    data = ["@core_sdk//:fsc_deps"],
+    version = "11.0.0.0",
+)
