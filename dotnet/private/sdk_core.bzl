@@ -17,6 +17,7 @@ def _core_download_sdk_impl(ctx):
     ctx.symlink("core/.", "mono_bin")
     ctx.symlink("core/sdk/" + ctx.attr.version, "lib")
     ctx.symlink("core/host/", "host")
+    ctx.symlink("core/sdk/" + ctx.attr.version + "/FSharp", "fsharp")
 
 core_download_sdk = repository_rule(
     _core_download_sdk_impl,

@@ -28,3 +28,30 @@ core_xunit_test(
         "@xunit.extensibility.execution//:netcoreapp2.1_core",
     ],
 )
+
+core_binary(
+    name = "custom_bin_fsharp.exe",
+    srcs = [
+        "main.fs",
+    ],
+    deps = [
+        "@io_bazel_rules_dotnet//dotnet/stdlib.core:libraryset",
+    ],
+)
+
+# core_xunit_test(
+#     name = "custom_bin_fsharp_test.dll",
+#     size = "medium",
+#     srcs = [
+#         "main_test.fs",
+#     ],
+#     data = [
+#         ":custom_bin_fsharp.exe",
+#     ],
+#     deps = [
+#         "@io_bazel_rules_dotnet//dotnet/stdlib.core:libraryset",
+#         "@xunit.assert//:netcoreapp2.1_core",
+#         "@xunit.extensibility.core//:netcoreapp2.1_core",
+#         "@xunit.extensibility.execution//:netcoreapp2.1_core",
+#     ],
+# )

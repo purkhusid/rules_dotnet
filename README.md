@@ -1,4 +1,4 @@
-C# Rules for Bazel_
+.Net Language Support for Bazel_
 ===================
 
 
@@ -19,7 +19,7 @@ The full documentation is [here](https://tomaszstrejczek.github.io/rules_dotnet/
 Overview
 --------
 
-This is a minimal viable set of C# bindings for building C# code with
+This is a minimal viable set of C#/F# bindings for building C#/F# code with
 [Core](https://en.wikipedia.org/wiki/.NET_Core)
 
 Caveats
