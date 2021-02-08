@@ -1,6 +1,7 @@
 load("generated.bzl", "define_stdlib")
 load("generated2.bzl", "define_runtime")
 load("@io_bazel_rules_dotnet//dotnet/private:rules/import.bzl", "core_import_binary_internal")
+load("@io_bazel_rules_dotnet//dotnet/private:rules/stdlib.bzl", "core_stdlib_internal")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -15,4 +16,18 @@ core_import_binary_internal(
     src = "@core_sdk_{}//:core/sdk/2.1.502/Roslyn/bincore/csc.dll".format(framework),
     data = ["@core_sdk_{}//:csc_deps".format(framework)],
     version = "2.10.0.0",
+)
+
+core_import_binary_internal(
+    name = "fsc.exe",
+    src = "@core_sdk_{}//:fsharp/fsc.exe".format(framework),
+    data = ["@core_sdk_{}//:fsc_deps".format(framework)],
+    version = "10.6.0.0",
+)
+
+core_stdlib_internal(
+    name = "FSharp.Core.dll",
+    ref = "@core_sdk_{}//:fsharp/FSharp.Core.dll".format(framework),
+    stdlib_path = "@core_sdk_{}//:fsharp/FSharp.Core.dll".format(framework),
+    version = "4.7.0.0",
 )

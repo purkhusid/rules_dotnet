@@ -25,7 +25,7 @@ core_import_binary_internal(
 
 core_stdlib_internal(
     name = "FSharp.Core.dll",
-    ref = "@core_sdk//:core/sdk/3.1.100/FSharp/FSharp.Core.dll",
-    stdlib_path = "@core_sdk//:core/sdk/3.1.100/FSharp/FSharp.Core.dll",
+    ref = "@core_sdk//:fsharp/FSharp.Core.dll",
+    stdlib_path = "@core_sdk//:fsharp/FSharp.Core.dll",
     version = "4.7.0.0",
 )
