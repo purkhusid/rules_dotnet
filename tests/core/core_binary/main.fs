@@ -1,6 +1,4 @@
-open System
-
 [<EntryPoint>]
 let main argv =
-    printf "Hello world"
+    printfn "Ok"
     0 // return an integer exit code
