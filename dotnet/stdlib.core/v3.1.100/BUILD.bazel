@@ -1,6 +1,7 @@
 load("generated.bzl", "define_stdlib")
 load("generated2.bzl", "define_runtime")
 load("@io_bazel_rules_dotnet//dotnet/private:rules/import.bzl", "core_import_binary_internal")
+load("@io_bazel_rules_dotnet//dotnet/private:rules/stdlib.bzl", "core_stdlib_internal")
 
 package(default_visibility = ["//visibility:public"])
 
