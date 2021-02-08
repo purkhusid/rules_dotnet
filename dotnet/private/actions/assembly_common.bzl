@@ -55,8 +55,10 @@ def emit_assembly_common(
     """
     if dotnet.lang == "csharp":
         return _emit_assembly_common_csharp(kind, dotnet, name, srcs, deps, out, resources, executable, defines, unsafe, data, keyfile, subdir, target_framework, nowarn, langversion, version)
-    else:
+    elif dotnet.lang == "fsharp":
         return _emit_assembly_common_fsharp(kind, dotnet, name, srcs, deps, out, resources, executable, defines, unsafe, data, keyfile, subdir, target_framework, nowarn, langversion, version)
+
+    fail("No source files were provided for compilation")
 
 def _emit_assembly_common_csharp(
         kind,
@@ -333,27 +335,33 @@ def _emit_assembly_common_fsharp(
     args.add_all(attr_srcs)
     direct_inputs += attr_srcs
 
-    #TODO: Figure out the F# version of this
-    # # Generate the source file for target framework
-    # if target_framework != "":
-    #     f = dotnet._ctx.actions.declare_file(result.basename + "._tf_.cs", sibling = result)
-    #     content = """
-    #     [assembly:System.Runtime.Versioning.TargetFramework("{}")]
-    #     """.format(target_framework)
-    #     dotnet._ctx.actions.write(f, content)
-    #     args.add(f)
-    #     direct_inputs.append(f)
+    # Generate the source file for target framework
+    if target_framework != "":
+        f = dotnet._ctx.actions.declare_file(result.basename + "._tf_.fs", sibling = result)
+        content = """
+        namespace Microsoft.BuildSettings
+                        [<System.Runtime.Versioning.TargetFrameworkAttribute(".NETCoreApp,Version={}", FrameworkDisplayName="")>]
+                        do ()
+        """.format(target_framework)
+        dotnet._ctx.actions.write(f, content)
+        args.add(f)
+        direct_inputs.append(f)
 
-    #TODO: Figure out the F# version of this
-    # # Generate the source file for assembly version
-    # if version != (0, 0, 0, 0, ""):
-    #     f = dotnet._ctx.actions.declare_file(result.basename + "._tv_.cs", sibling = result)
-    #     content = """
-    #     [assembly:System.Reflection.AssemblyVersion("{}")]
-    #     """.format(version2string(version))
-    #     dotnet._ctx.actions.write(f, content)
-    #     args.add(f)
-    #     direct_inputs.append(f)
+    # Generate the source file for assembly version
+    if version != (0, 0, 0, 0, ""):
+        f = dotnet._ctx.actions.declare_file(result.basename + "._tv_.fs", sibling = result)
+        content = """
+        namespace FSharp
+
+        open System
+        open System.Reflection
+
+        [<assembly: System.Reflection.AssemblyVersionAttribute("{}")>]
+        do()
+        """.format(version2string(version))
+        dotnet._ctx.actions.write(f, content)
+        args.add(f)
+        direct_inputs.append(f)
 
     # References - also needs to include transitive dependencies
     transitive = collect_transitive_info(deps)
