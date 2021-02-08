@@ -145,16 +145,18 @@ def dotnet_context(ctx):
 
     # Make sure that that there are exlusively .cs or .fs sources in the src attribute
     extension = ""
-    for f in ctx.files.srcs:
-        if extension == "":
-            extension = f.extension
-        elif extension != f.extension:
-            fail("The srcs attribute can only contain exlusively .cs or .fs files")
+    lang = ""
+    if hasattr(ctx.files, "srcs") and len(ctx.files.srcs) > 0:
+        for f in ctx.files.srcs:
+            if extension == "":
+                extension = f.extension
+            elif extension != f.extension:
+                fail("The srcs attribute can only contain exlusively .cs or .fs files")
 
-    if extension == "cs":
-        lang = "csharp"
-    else:
-        lang = "fsharp"
+        if extension == "cs":
+            lang = "csharp"
+        elif extension == "fs":
+            lang = "fsharp"
 
     attr = ctx.attr
 
