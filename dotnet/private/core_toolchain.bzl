@@ -12,6 +12,9 @@ def _get_dotnet_runner(context_data, ext):
 def _get_dotnet_mcs(context_data):
     return context_data._csc
 
+def _get_dotnet_fsc(context_data):
+    return context_data._fsc
+
 def _get_dotnet_resgen(context_data):
     return None
 
@@ -47,6 +50,7 @@ def _core_toolchain_impl(ctx):
         dotnetarch = ctx.attr.dotnetarch,
         get_dotnet_runner = _get_dotnet_runner,
         get_dotnet_mcs = _get_dotnet_mcs,
+        get_dotnet_fsc = _get_dotnet_fsc,
         get_dotnet_resgen = _get_dotnet_resgen,
         get_dotnet_tlbimp = _get_dotnet_tlbimp,
         get_dotnet_stdlib = _get_dotnet_stdlib,

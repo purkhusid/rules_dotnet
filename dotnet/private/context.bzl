@@ -22,6 +22,7 @@ DotnetContextInfo = provider(
     """,
     fields = {
         "label": "Rule's label.",
+        "lang": "The programming language being used",
         "toolchain": "Toolchain selected for the rule.",
         "actions": "Copy of ctx.actions (legacy).",
         "assembly": "Toolchain's assembly function. See [emit_assembly_core](api.md#emit_assembly_core) for the function signature.",
@@ -30,6 +31,7 @@ DotnetContextInfo = provider(
         "exe_extension": "The suffix to use for all executables in this build mode. Mostly used when generating the output filenames of binary rules.",
         "runner": "An executable to be used by SDK to launch .NET Core programs (dotnet(.exe)).",
         "mcs": "C# compiler.",
+        "fsc": "F# compiler.",
         "stdlib": "None. Not used.",
         "resgen": "None. Not used.",
         "tlbimp": "None. Not used.",
@@ -149,6 +151,11 @@ def dotnet_context(ctx):
         elif extension != f.extension:
             fail("The srcs attribute can only contain exlusively .cs or .fs files")
 
+    if extension == "cs":
+        lang = "csharp"
+    else:
+        lang = "fsharp"
+
     attr = ctx.attr
 
     context_data = attr.dotnet_context_data
@@ -162,18 +169,21 @@ def dotnet_context(ctx):
     if toolchain.get_dotnet_runner == None:
         runner = None
         mcs = None
+        fsc = None
         stdlib = None
         resgen = None
         tlbimp = None
     else:
         runner = toolchain.get_dotnet_runner(context_data, ext)
         mcs = toolchain.get_dotnet_mcs(context_data)
+        fsc = toolchain.get_dotnet_fsc(context_data)
         stdlib = toolchain.get_dotnet_stdlib(context_data)
         resgen = toolchain.get_dotnet_resgen(context_data)
         tlbimp = toolchain.get_dotnet_tlbimp(context_data)
 
     return DotnetContextInfo(
         label = ctx.label,
+        lang = lang,
         toolchain = toolchain,
         actions = ctx.actions,
         assembly = toolchain.actions.assembly,
@@ -182,6 +192,7 @@ def dotnet_context(ctx):
         exe_extension = ext,
         runner = runner,
         mcs = mcs,
+        fsc = fsc,
         stdlib = stdlib,
         resgen = resgen,
         tlbimp = tlbimp,
@@ -210,6 +221,7 @@ def _dotnet_context_data(ctx):
         _framework = ctx.attr.framework,
         _runner = ctx.attr.runner,
         _csc = ctx.attr.csc,
+        _fsc = ctx.attr.fsc,
         _runtime = ctx.attr.runtime,
     )
 
