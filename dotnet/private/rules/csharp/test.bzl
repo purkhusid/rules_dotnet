@@ -27,7 +27,7 @@ def _unit_test(ctx):
     )
     return wrap_binary(executable, dotnet, ctx.attr.testlauncher[DotnetLibraryInfo])
 
-core_xunit_test = rule(
+csharp_xunit_test = rule(
     _unit_test,
     attrs = {
         "deps": attr.label_list(providers = [DotnetLibraryInfo], doc = "The direct dependencies of this library. These may be dotnet_library rules or compatible rules with the [DotnetLibraryInfo](api.md#dotnetlibraryinfo) provider."),
@@ -64,7 +64,7 @@ core_xunit_test = rule(
     """,
 )
 
-core_nunit3_test = rule(
+csharp_nunit3_test = rule(
     _unit_test,
     attrs = {
         "deps": attr.label_list(providers = [DotnetLibraryInfo], doc = "The direct dependencies of this library. These may be dotnet_library rules or compatible rules with the [DotnetLibraryInfo](api.md#dotnetlibraryinfo) provider."),

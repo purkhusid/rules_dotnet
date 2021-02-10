@@ -15,6 +15,14 @@ load(
     _csharp_library = "csharp_library",
 )
 load(
+    "//dotnet/private:rules/fsharp/binary.bzl",
+    _fsharp_binary = "fsharp_binary",
+)
+load(
+    "//dotnet/private:rules/fsharp/library.bzl",
+    _fsharp_library = "fsharp_library",
+)
+load(
     "//dotnet/private:rules/libraryset.bzl",
     _core_libraryset = "core_libraryset",
 )
@@ -33,9 +41,9 @@ load(
     _core_stdlib_internal = "core_stdlib_internal",
 )
 load(
-    "//dotnet/private:rules/test.bzl",
-    _core_nunit3_test = "core_nunit3_test",
-    _core_xunit_test = "core_xunit_test",
+    "//dotnet/private:rules/csharp/test.bzl",
+    _csharp_nunit3_test = "csharp_nunit3_test",
+    _csharp_xunit_test = "csharp_xunit_test",
 )
 load(
     "//dotnet/private:rules/nuget.bzl",
@@ -63,14 +71,16 @@ dotnet_context = _dotnet_context
 dotnet_register_toolchains = _dotnet_register_toolchains
 csharp_binary = _csharp_binary
 csharp_library = _csharp_library
+fsharp_binary = _fsharp_binary
+fsharp_library = _fsharp_library
 core_libraryset = _core_libraryset
 core_resx = _core_resx
 core_resource = _core_resource
 core_resource_multi = _core_resource_multi
 core_stdlib = _core_stdlib
 core_stdlib_internal = _core_stdlib_internal
-core_xunit_test = _core_xunit_test
-core_nunit3_test = _core_nunit3_test
+csharp_xunit_test = _csharp_xunit_test
+csharp_nunit3_test = _csharp_nunit3_test
 dotnet_nuget_new = _dotnet_nuget_new
 nuget_package = _nuget_package
 core_import_binary = _core_import_binary
