@@ -109,7 +109,7 @@ core_stdlib = rule(
         "stdlib_path": attr.label(allow_files = True, doc = "The stdlib_path to be used instead of looking for one in sdk by name speeds up the rule execution because the proper file needs not to be searched for within sdk."),
         "dotnet_context_data": attr.label(default = Label("@io_bazel_rules_dotnet//:core_context_data")),
     },
-    toolchains = ["@io_bazel_rules_dotnet//dotnet:toolchain_type_core"],
+    toolchains = ["@io_bazel_rules_dotnet//dotnet:toolchain_type_csharp_core"],
     executable = False,
     doc = "It imports a framework dll and transforms it into [DotnetLibraryInfo](api.md#dotnetlibraryinfo) so it can be referenced as dependency by other rules.",
 )

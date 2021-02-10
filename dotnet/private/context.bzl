@@ -117,7 +117,7 @@ def dotnet_context(ctx):
           ...
         "dotnet_context_data": attr.label(default = Label("@io_bazel_rules_dotnet//:core_context_data"))
       },
-      toolchains = ["@io_bazel_rules_dotnet//dotnet:toolchain_type_core"],
+      toolchains = ["@io_bazel_rules_dotnet//dotnet:toolchain_type_csharp_core"],
     )
     ```
 
@@ -136,7 +136,7 @@ def dotnet_context(ctx):
     """
     attr = ctx.attr
 
-    toolchain = ctx.toolchains["@io_bazel_rules_dotnet//dotnet:toolchain_type_core"]
+    toolchain = ctx.toolchains["@io_bazel_rules_dotnet//dotnet:toolchain_type_csharp_core"]
 
     ext = ""
     if toolchain.os == "windows":

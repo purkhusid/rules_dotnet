@@ -74,7 +74,7 @@ core_resx = rule(
         "out": attr.string(doc = "An alternative name of the output file"),
         "simpleresgen": attr.label(default = Label("@io_bazel_rules_dotnet//tools/simpleresgen:simpleresgen.exe"), doc = "An alternative tool for generating resources file."),
     },
-    toolchains = ["@io_bazel_rules_dotnet//dotnet:toolchain_type_core"],
+    toolchains = ["@io_bazel_rules_dotnet//dotnet:toolchain_type_csharp_core"],
     executable = False,
     doc = "This builds a dotnet .resources file from a single .resx file. Uses a custom tool to convert text .resx file to .resources files because no standard tool is provided.",
 )

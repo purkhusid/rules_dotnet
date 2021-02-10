@@ -111,7 +111,7 @@ core_import_binary = rule(
         "_symlink": attr.label(default = Label("@io_bazel_rules_dotnet//dotnet/tools/symlink")),
         "data_with_dirs": attr.label_keyed_string_dict(allow_files = True, doc = "Dictionary of {label:folder}. Files specified by <label> will be put in subdirectory <folder>."),
     },
-    toolchains = ["@io_bazel_rules_dotnet//dotnet:toolchain_type_core"],
+    toolchains = ["@io_bazel_rules_dotnet//dotnet:toolchain_type_csharp_core"],
     executable = True,
     doc = "This imports an external assembly and transforms it into .NET Core binary. ",
 )
