@@ -7,12 +7,12 @@ load(
     _dotnet_register_toolchains = "dotnet_register_toolchains",
 )
 load(
-    "//dotnet/private:rules/binary.bzl",
-    _core_binary = "core_binary",
+    "//dotnet/private:rules/csharp/binary.bzl",
+    _csharp_binary = "csharp_binary",
 )
 load(
-    "//dotnet/private:rules/library.bzl",
-    _core_library = "core_library",
+    "//dotnet/private:rules/csharp/library.bzl",
+    _csharp_library = "csharp_library",
 )
 load(
     "//dotnet/private:rules/libraryset.bzl",
@@ -61,8 +61,8 @@ load(
 
 dotnet_context = _dotnet_context
 dotnet_register_toolchains = _dotnet_register_toolchains
-core_binary = _core_binary
-core_library = _core_library
+csharp_binary = _csharp_binary
+csharp_library = _csharp_library
 core_libraryset = _core_libraryset
 core_resx = _core_resx
 core_resource = _core_resource

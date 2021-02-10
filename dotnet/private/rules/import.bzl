@@ -87,7 +87,7 @@ def _import_binary_internal_impl(ctx):
 core_import_library = rule(
     _import_library_impl,
     attrs = {
-        "deps": attr.label_list(providers = [DotnetLibraryInfo], doc = "The direct dependencies of this dll. These may be [core_library](api.md#core_library) rules or compatible rules with the [DotnetLibraryInfo](api.md#dotnetlibraryinfo) provider."),
+        "deps": attr.label_list(providers = [DotnetLibraryInfo], doc = "The direct dependencies of this dll. These may be compatible with the [DotnetLibraryInfo](api.md#dotnetlibraryinfo) provider."),
         "src": attr.label(allow_files = [".dll", ".exe"], mandatory = True, doc = "The file to be transformed into [DotnetLibraryInfo](api.md#dotnetlibraryinfo) provider."),
         "data": attr.label_list(allow_files = True, doc = "Additional files to copy with the target assembly. "),
         "version": attr.string(mandatory = True, doc = "Version of the imported assembly."),
@@ -101,7 +101,7 @@ core_import_library = rule(
 core_import_binary = rule(
     _import_binary_internal_impl,
     attrs = {
-        "deps": attr.label_list(providers = [DotnetLibraryInfo], doc = "The direct dependencies of this dll. These may be [core_library](api.md#core_library) rules or compatible rules with the [DotnetLibraryInfo](api.md#dotnetlibraryinfo) provider."),
+        "deps": attr.label_list(providers = [DotnetLibraryInfo], doc = "The direct dependencies of this dll. These may be rules or compatible rules with the [DotnetLibraryInfo](api.md#dotnetlibraryinfo) provider."),
         "src": attr.label(allow_files = [".dll", ".exe"], mandatory = True, doc = "The file to be transformed into [DotnetLibraryInfo](api.md#dotnetlibraryinfo) provider."),
         "data": attr.label_list(allow_files = True, doc = "Additional files to copy with the target assembly."),
         "version": attr.string(mandatory = True, doc = "Version of the imported assembly."),
