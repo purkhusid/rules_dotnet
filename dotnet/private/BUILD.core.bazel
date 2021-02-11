@@ -17,6 +17,11 @@ filegroup(
 )
 
 filegroup(
+    name = "sdk_fsharp_runtime_deps",
+    srcs = glob(["core/sdk/{sdkVersion}/FSharp/*.dll"]),
+)
+
+filegroup(
     name = "sdk_lib",
     srcs = glob([
         "core/sdk/{sdkVersion}/**/*",

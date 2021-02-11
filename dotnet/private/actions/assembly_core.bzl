@@ -407,7 +407,7 @@ def emit_assembly_core_fsharp(
     data_l = [f for t in data for f in as_iterable(t.files)]
     direct_runfiles += data_l
 
-    runfiles = depset(direct = direct_runfiles)
+    runfiles = depset(direct = direct_runfiles, transitive = [dotnet.toolchain.sdk_fsharp_runtime_deps.files])
 
     # Final result
     new_library = DotnetLibraryInfo(
