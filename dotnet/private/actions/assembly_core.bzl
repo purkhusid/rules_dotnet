@@ -224,7 +224,6 @@ def emit_assembly_core_fsharp(
         resources = None,
         executable = True,
         defines = None,
-        unsafe = False,
         data = None,
         keyfile = None,
         subdir = "./",
@@ -286,17 +285,19 @@ def emit_assembly_core_fsharp(
     args.add(target, format = "/target:%s")
 
     args.add("/checked-")
-    args.add("/nostdlib+")
     args.add("/utf8output")
     args.add("/deterministic+")
-    args.add("/filealign:512")
     args.add("/nologo")
     args.add("/highentropyva+")
-    args.add("/langversion:{}".format(langversion))
+    args.add("/noframework")
+    args.add("/nowin32manifest")
+    args.add("/targetprofile:netcore")
+    args.add("/simpleresolution")
+    args.add("/nocopyfsharpcore")
 
     # Debug parameters
     if pdb:
-        args.add("-debug:full")
+        args.add("-debug:portable")
         args.add("-pdb:" + pdb.path)
         args.add("/optimize-")
         args.add("/define:TRACE;DEBUG")
@@ -304,9 +305,6 @@ def emit_assembly_core_fsharp(
         args.add("/debug-")
         args.add("/optimize+")
         args.add("/define:TRACE;RELEASE")
-
-    if unsafe:
-        args.add("/unsafe")
 
     # Keyfile
     if keyfile:
@@ -336,9 +334,11 @@ def emit_assembly_core_fsharp(
 
     # Generate the source file for target framework
     if target_framework != "":
-        f = dotnet.actions.declare_file(result.basename + "._tf_.cs", sibling = result)
+        f = dotnet.actions.declare_file(result.basename + "._tf_.fs", sibling = result)
         content = """
-        [assembly:System.Runtime.Versioning.TargetFramework("{}")]
+        namespace Microsoft.BuildSettings
+                        [<System.Runtime.Versioning.TargetFrameworkAttribute(".NETCoreApp,Version={}", FrameworkDisplayName="")>]
+                        do ()
         """.format(target_framework)
         dotnet.actions.write(f, content)
         args.add(f)
@@ -346,9 +346,15 @@ def emit_assembly_core_fsharp(
 
     # Generate the source file for assembly version
     if version != (0, 0, 0, 0, ""):
-        f = dotnet.actions.declare_file(result.basename + "._tv_.cs", sibling = result)
+        f = dotnet.actions.declare_file(result.basename + "._tv_.fs", sibling = result)
         content = """
-        [assembly:System.Reflection.AssemblyVersion("{}")]
+        namespace FSharp
+
+        open System
+        open System.Reflection
+
+        [<assembly: System.Reflection.AssemblyVersionAttribute("{}")>]
+        do()
         """.format(version2string(version))
         dotnet._ctx.actions.write(f, content)
         args.add(f)
@@ -375,10 +381,10 @@ def emit_assembly_core_fsharp(
 
     # select runner and action_args
     runner_target = dotnet.toolchain.sdk_exec_runner
-    csc_target = dotnet.toolchain.sdk_exec_csc
+    fsc_target = dotnet.toolchain.sdk_exec_fsc
     runner = runner_target.files_to_run
-    runner_tools = depset(transitive = [runner_target.default_runfiles.files, csc_target.default_runfiles.files])
-    action_args = [csc_target.files_to_run.executable.path, "/noconfig", "@" + paramfile.path]
+    runner_tools = depset(transitive = [runner_target.default_runfiles.files, fsc_target.default_runfiles.files])
+    action_args = [fsc_target.files_to_run.executable.path, "@" + paramfile.path]
 
     inputs = depset(direct = direct_inputs, transitive = [depset(direct = refs)])
     dotnet.actions.run(

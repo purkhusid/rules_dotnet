@@ -41,7 +41,7 @@ def _import_library_impl(ctx):
     ]
 
 def _import_binary_internal_impl(ctx):
-    dotnet = dotnet_context(ctx)
+    dotnet = dotnet_context(ctx, "csharp")
 
     name = dotnet._ctx.label.name
     subdir = name + "/"

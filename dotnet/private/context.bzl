@@ -99,7 +99,7 @@ def new_resource(dotnet, name, result, identifier = None, **kwargs):
         **kwargs
     )
 
-def dotnet_context(ctx):
+def dotnet_context(ctx, lang):
     """Converts rule's context to [DotnetContextInfo](api.md#dotnetcontextinfo)
 
     It uses the attrbutes and the toolchains.
@@ -130,13 +130,20 @@ def dotnet_context(ctx):
 
     Args:
         ctx: The Bazel ctx object for the current rule.
+        lang: The proramming languge for the current rule.
 
     Returns:
         DotnetContextInfo: [DotnetContextInfo](api.md#dotnetcontextinfo) provider for ctx rule.
     """
     attr = ctx.attr
 
-    toolchain = ctx.toolchains["@io_bazel_rules_dotnet//dotnet:toolchain_type_csharp_core"]
+    if lang == "csharp":
+        toolchain = ctx.toolchains["@io_bazel_rules_dotnet//dotnet:toolchain_type_csharp_core"]
+    elif lang == "fsharp":
+        toolchain = ctx.toolchains["@io_bazel_rules_dotnet//dotnet:toolchain_type_fsharp_core"]
+    else:
+        fail("Only C# and F# are supported")
+
 
     ext = ""
     if toolchain.os == "windows":

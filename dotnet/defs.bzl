@@ -46,6 +46,11 @@ load(
     _csharp_xunit_test = "csharp_xunit_test",
 )
 load(
+    "//dotnet/private:rules/fsharp/test.bzl",
+    _fsharp_nunit3_test = "fsharp_nunit3_test",
+    _fsharp_xunit_test = "fsharp_xunit_test",
+)
+load(
     "//dotnet/private:rules/nuget.bzl",
     _dotnet_nuget_new = "dotnet_nuget_new",
     _nuget_package = "nuget_package",
@@ -81,6 +86,8 @@ core_stdlib = _core_stdlib
 core_stdlib_internal = _core_stdlib_internal
 csharp_xunit_test = _csharp_xunit_test
 csharp_nunit3_test = _csharp_nunit3_test
+fsharp_xunit_test = _fsharp_xunit_test
+fsharp_nunit3_test = _fsharp_nunit3_test
 dotnet_nuget_new = _dotnet_nuget_new
 nuget_package = _nuget_package
 core_import_binary = _core_import_binary

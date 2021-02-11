@@ -9,7 +9,7 @@ load("@io_bazel_rules_dotnet//dotnet/private:rules/versions.bzl", "parse_version
 
 def _library_impl(ctx):
     """_library_impl emits actions for compiling dotnet executable assembly."""
-    dotnet = dotnet_context(ctx)
+    dotnet = dotnet_context(ctx, "csharp")
     name = ctx.label.name
 
     library = dotnet.toolchain.actions.assembly(

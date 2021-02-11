@@ -10,7 +10,7 @@ load("@rules_dotnet_skylib//lib:paths.bzl", "paths")
 
 def _resx_impl(ctx):
     """dotnet_resx_impl emits actions for compiling resx to resource."""
-    dotnet = dotnet_context(ctx)
+    dotnet = dotnet_context(ctx, "csharp")
     name = ctx.label.name
 
     resource = dotnet.toolchain.actions.resx(
@@ -30,7 +30,7 @@ def _resx_impl(ctx):
     ]
 
 def _resx_multi_impl(ctx):
-    dotnet = dotnet_context(ctx)
+    dotnet = dotnet_context(ctx, "csharp")
     name = ctx.label.name
 
     if ctx.attr.identifierBase != "" and ctx.attr.fixedIdentifierBase != "":
