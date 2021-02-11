@@ -1,4 +1,4 @@
-load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "core_libraryset", "csharp_xunit_test")
+load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "core_libraryset", "csharp_xunit_test", "fsharp_xunit_test")
 
 core_libraryset(
     name = "level1",
@@ -28,6 +28,20 @@ csharp_xunit_test(
     name = "libraryset2.dll",
     srcs = [
         "main_test.cs",
+    ],
+    deps = [
+        ":level2",
+        "@core_sdk_stdlib//:libraryset",
+        "@xunit.assert//:lib",
+        "@xunit.extensibility.core//:lib",
+        "@xunit.extensibility.execution//:lib",
+    ],
+)
+
+fsharp_xunit_test(
+    name = "libraryset2_fsharp.dll",
+    srcs = [
+        "main_test.fs",
     ],
     deps = [
         ":level2",
