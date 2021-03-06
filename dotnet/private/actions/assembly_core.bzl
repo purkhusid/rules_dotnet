@@ -221,6 +221,7 @@ def emit_assembly_core_fsharp(
         dotnet,
         name,
         srcs,
+        extra_files = None,
         deps = None,
         out = None,
         resources = None,
@@ -241,6 +242,7 @@ def emit_assembly_core_fsharp(
       dotnet: DotnetContextInfo provider
       name: name of the assembly
       srcs: source files (as passed from rules: list of lables/targets)
+      extra_files: Extra files that that are made available at compile time. Useful for type providers. 
       deps: list of DotnetLibraryInfo. Dependencies as passed from rules)
       out: output file name if provided. Otherwise name is used
       resources: list of DotnetResourceListInfo provider
@@ -328,10 +330,9 @@ def emit_assembly_core_fsharp(
             res_l = [t.result for t in r[DotnetResourceListInfo].result]
             direct_inputs += res_l
 
-    # Source files
-    attr_srcs = [f for t in srcs for f in as_iterable(t.files)]
-    args.add_all(attr_srcs)
-    direct_inputs += attr_srcs
+    # Extra files
+    for f in extra_files:
+        direct_inputs += f.files.to_list()
 
     # Generate the source file for target framework
     if target_framework != "":
@@ -370,6 +371,11 @@ def emit_assembly_core_fsharp(
             refs.append(d.ref)
 
     args.add_all(refs, format_each = "/r:%s")
+
+    # Source files
+    attr_srcs = [f for t in srcs for f in as_iterable(t.files)]
+    args.add_all(attr_srcs)
+    direct_inputs += attr_srcs
 
     args.set_param_file_format("multiline")
 

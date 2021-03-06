@@ -1,0 +1,16 @@
+load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "fsharp_binary")
+
+fsharp_binary(
+    name = "foo.exe",
+    srcs = [
+        "Program.fs",
+    ],
+    extra_files = [
+        "foo.json",
+    ],
+    deps = [
+        "@fsharp.data//:lib",
+        "@core_sdk_stdlib//:libraryset",
+        # "@FSharp.Data.DesignTime//:FSharp.Data.DesignTime.dll",
+    ],
+)
