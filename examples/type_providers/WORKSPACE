@@ -9,10 +9,9 @@ dotnet_repositories()
 
 load(
     "@io_bazel_rules_dotnet//dotnet:defs.bzl",
+    "dotnet_nuget_new",
     "dotnet_register_toolchains",
     "dotnet_repositories_nugets",
-    "dotnet_nuget_new",
-    "nuget_package",
 )
 
 dotnet_register_toolchains()
@@ -21,10 +20,7 @@ dotnet_repositories_nugets()
 
 #load NUGET deps
 dotnet_nuget_new(
-    name = "FSharp.Data", 
-    package="FSharp.Data", 
-    version="4.0.1", 
-    sha256="2dfeb80b54bbf876624654871829954ca2daf5c5996b320fd203b9474aa1b9be",
+    name = "FSharp.Data",
     build_file_content = """
 package(default_visibility = [ "//visibility:public" ])
 load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "core_import_library")
@@ -40,5 +36,8 @@ core_import_library(
     src = "typeproviders/fsharp41/netstandard2.0/FSharp.Data.DesignTime.dll",
     version = "4.0.1",
 )  
-    """
+    """,
+    package = "FSharp.Data",
+    sha256 = "2dfeb80b54bbf876624654871829954ca2daf5c5996b320fd203b9474aa1b9be",
+    version = "4.0.1",
 )
