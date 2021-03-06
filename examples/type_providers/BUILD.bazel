@@ -9,8 +9,8 @@ fsharp_binary(
         "foo.json",
     ],
     deps = [
-        "@fsharp.data//:lib",
+        "@FSharp.Data//:FSharp.Data.dll",
+        "@FSharp.Data//:FSharp.Data.DesignTime.dll",
         "@core_sdk_stdlib//:libraryset",
-        # "@FSharp.Data.DesignTime//:FSharp.Data.DesignTime.dll",
     ],
 )
