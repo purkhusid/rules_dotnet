@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <EnableDefaultCompileItems>False</EnableDefaultCompileItems>
+    <DefaultItemExcludes>$(DefaultItemExcludes);bazel-grpc\**</DefaultItemExcludes>
+  </PropertyGroup>
+
+
+  <ItemGroup>
+    <Compile Include="bazel-bin/service_proto_gen_cs.dll_pb/Helloworld.cs" />
+    <Compile Include="bazel-bin/service_proto_gen_cs.dll_pb/HelloworldGrpc.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- <PackageReference Include="CommandLineParser" Version="2.6.0" /> -->
+  </ItemGroup>
+
+</Project>

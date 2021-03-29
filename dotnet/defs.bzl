@@ -73,6 +73,10 @@ load(
     "@io_bazel_rules_dotnet//dotnet/private:nugets.bzl",
     _dotnet_repositories_nugets = "dotnet_repositories_nugets",
 )
+load(
+    "@io_bazel_rules_dotnet//dotnet/private:generate_xproj.bzl",
+    _generate_xproj = "generate_xproj",
+)
 
 dotnet_context = _dotnet_context
 dotnet_register_toolchains = _dotnet_register_toolchains
@@ -99,3 +103,4 @@ DOTNET_CORE_NAMES = _DOTNET_CORE_NAMES
 DEFAULT_DOTNET_CORE_FRAMEWORK = _DEFAULT_DOTNET_CORE_FRAMEWORK
 DOTNET_NETSTANDARD = _DOTNET_NETSTANDARD
 dotnet_repositories_nugets = _dotnet_repositories_nugets
+generate_xproj = _generate_xproj
