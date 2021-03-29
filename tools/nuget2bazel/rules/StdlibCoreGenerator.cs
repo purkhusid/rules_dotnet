@@ -23,8 +23,7 @@ namespace nuget2bazel.rules
             foreach (var tfm in SdkInfos.Sdks.Where(x => x.Packs == null))
             {
                 var refs = await tfm.GetRefInfos(_configDir);
-                await GenerateBazelFile(Path.Combine(_rulesPath, $"dotnet/stdlib.core/{tfm.Version}/generated.bzl"),
-                    refs);
+                await GenerateBazelFile(Path.Combine(_rulesPath, $"dotnet/private/stdlib/{tfm.Version}.bzl"), refs);
             }
         }
 
@@ -34,7 +33,7 @@ namespace nuget2bazel.rules
             await f.WriteLineAsync("load(\"@io_bazel_rules_dotnet//dotnet/private:rules/stdlib.bzl\", \"core_stdlib_internal\")");
             await f.WriteLineAsync("load(\"@io_bazel_rules_dotnet//dotnet/private:rules/libraryset.bzl\", \"core_libraryset\")");
             await f.WriteLineAsync();
-            await f.WriteLineAsync("def define_stdlib(context_data):");
+            await f.WriteLineAsync("def define_stdlib():");
 
             await f.WriteLineAsync("    core_libraryset(");
             await f.WriteLineAsync("        name = \"libraryset\",");
