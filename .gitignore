@@ -14,3 +14,5 @@ package-lock.json
 package.json
 .ionide
 .bazelrc.user
+paket-files
+tools/paket2bazel/packages

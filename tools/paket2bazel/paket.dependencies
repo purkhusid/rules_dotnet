@@ -1,0 +1,8 @@
+source https://api.nuget.org/v3/index.json
+framework: netcoreapp3.1
+
+nuget Argu = 6.1.1
+nuget Paket.Core = 6.0.0-beta8
+nuget Nuget.PackageManagement = 5.9.0
+nuget FParsec = 1.1.1
+nuget Fantomas = 4.4.0
