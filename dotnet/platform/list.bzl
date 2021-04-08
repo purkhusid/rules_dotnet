@@ -29,6 +29,12 @@ DOTNET_NETSTANDARD = {
     "netstandard2.2": (".NETStandard,Version=v2.2", "NETSTANDARD2_2"),
 }
 
+DOTNET_FRAMEWORK_TARGETS = (
+    ("libraryset", ["2.1.200", "2.1.502", "2.1.503", "2.2.101", "2.2.402", "3.0.100", "3.1.100", "3.1.407", "5.0.201"]),
+    ("NETStandard.Library", ["3.0.100", "3.1.100", "3.1.407", "5.0.201"]),
+    ("Microsoft.AspNetCore.App", ["3.0.100", "3.1.100", "3.1.407", "5.0.201"]),
+)
+
 # struct:
 # 0. Version string - as required by TargetFrameworkAttribute and use for the download
 # 1. Preporocesor directive

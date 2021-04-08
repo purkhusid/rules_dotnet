@@ -6,6 +6,7 @@ load(
     "@io_bazel_rules_dotnet//dotnet/platform:list.bzl",
     "DOTNET_CORE_FRAMEWORKS",
     "DOTNET_OS_ARCH",
+    "DOTNET_FRAMEWORK_TARGETS",
 )
 load(
     "@io_bazel_rules_dotnet//dotnet/toolchain:toolchains.bzl",
@@ -61,10 +62,10 @@ def _core_stdlib_impl(ctx):
     ctx.file("ROOT")
 
     body = ""
-    for target in ["libraryset", "NETStandard.Library", "Microsoft.AspNetCore.App", "Microsoft.NETCore.App", "Microsoft.WindowsDesktop.App"]:
+    for target, sdks in DOTNET_FRAMEWORK_TARGETS:
         values = ""
         for os, arch in DOTNET_OS_ARCH:
-            for sdk in DOTNET_CORE_FRAMEWORKS:
+            for sdk in sdks:
                 name = "{}_{}_{}".format(os, arch, sdk)
                 key = "@io_bazel_rules_dotnet//dotnet/toolchain:" + name + "_config"
                 val = "@core_sdk_" + name + "//:" + target
