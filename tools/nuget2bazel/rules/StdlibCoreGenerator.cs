@@ -38,6 +38,16 @@ namespace nuget2bazel.rules
 
             await f.WriteLineAsync("    \"Declares stdlib\"");
             await f.WriteLineAsync("    core_libraryset(");
+            await f.WriteLineAsync("        name = \"NETStandard.Library\",");
+            await f.WriteLineAsync("        deps = [");
+            await f.WriteLineAsync("        ],");
+            await f.WriteLineAsync("    )");
+            await f.WriteLineAsync("    core_libraryset(");
+            await f.WriteLineAsync("        name = \"Microsoft.AspNetCore.App\",");
+            await f.WriteLineAsync("        deps = [");
+            await f.WriteLineAsync("        ],");
+            await f.WriteLineAsync("    )");
+            await f.WriteLineAsync("    core_libraryset(");
             await f.WriteLineAsync("        name = \"libraryset\",");
             await f.WriteLineAsync("        deps = [");
             foreach (var d in libs)

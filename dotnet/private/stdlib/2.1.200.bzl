@@ -5,6 +5,16 @@ load("@io_bazel_rules_dotnet//dotnet/private:rules/libraryset.bzl", "core_librar
 def define_stdlib():
     "Declares stdlib"
     core_libraryset(
+        name = "NETStandard.Library",
+        deps = [
+        ],
+    )
+    core_libraryset(
+        name = "Microsoft.AspNetCore.App",
+        deps = [
+        ],
+    )
+    core_libraryset(
         name = "libraryset",
         deps = [
             ":system.buffers.dll",
