@@ -36,6 +36,7 @@ namespace nuget2bazel.rules
             var sdkDirOsx = await ZipDownloader.DownloadIfNedeed(_configDir, sdk.DarwinUrl);
 
             await f.WriteLineAsync("\"\"");
+            await f.WriteLineAsync();
             await f.WriteLineAsync("load(\"@io_bazel_rules_dotnet//dotnet/private:rules/stdlib.bzl\", \"core_stdlib_internal\")");
             await f.WriteLineAsync("load(\"@io_bazel_rules_dotnet//dotnet/private:rules/libraryset.bzl\", \"core_libraryset\")");
             await f.WriteLineAsync();
@@ -45,10 +46,10 @@ namespace nuget2bazel.rules
 
             if (sdk.Packs != null)
             {
-                await f.WriteLineAsync("    native.alias(name=\"system.security.accesscontrol.dll\", actual=\":p1_system.security.accesscontrol.dll\")");
-                await f.WriteLineAsync("    native.alias(name=\"system.security.principal.windows.dll\", actual=\":p1_system.security.principal.windows.dll\")");
-                await f.WriteLineAsync("    native.alias(name=\"microsoft.win32.registry.dll\", actual=\":p1_microsoft.win32.registry.dll\")");
-                await f.WriteLineAsync("    native.alias(name=\"system.security.cryptography.cng.dll\", actual=\":p1_system.security.cryptography.cng.dll\")");
+                await f.WriteLineAsync("    native.alias(name = \"system.security.accesscontrol.dll\", actual = \":p1_system.security.accesscontrol.dll\")");
+                await f.WriteLineAsync("    native.alias(name = \"system.security.principal.windows.dll\", actual = \":p1_system.security.principal.windows.dll\")");
+                await f.WriteLineAsync("    native.alias(name = \"microsoft.win32.registry.dll\", actual = \":p1_microsoft.win32.registry.dll\")");
+                await f.WriteLineAsync("    native.alias(name = \"system.security.cryptography.cng.dll\", actual = \":p1_system.security.cryptography.cng.dll\")");
             }
 
             var infosWindows = await ProcessDirectory(f, $"windows_runtime_deps", sdkDirWin, sdk);
@@ -109,7 +110,7 @@ namespace nuget2bazel.rules
                     await f.WriteLineAsync($"        deps = [");
                     foreach (var dep in d.Deps)
                         await f.WriteLineAsync($"            {dep},");
-                    await f.WriteLineAsync($"        ]");
+                    await f.WriteLineAsync($"        ],");
                     await f.WriteLineAsync($"    )");
                 }
 
