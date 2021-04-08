@@ -66,7 +66,7 @@ namespace nuget2bazel
 
             await packageManager.InstallPackageAsync(packageManager.PackagesFolderNuGetProject,
                 identity, resolutionContext, projectContext, sourceRepository,
-                sourceRepositoryProvider.GetRepositories(),
+                Array.Empty<SourceRepository>(),
                 CancellationToken.None);
 
             NuGetPackageManager.ClearDirectInstall(projectContext);
