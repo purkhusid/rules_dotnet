@@ -30,5 +30,6 @@ csharp_binary(
         "@nuget.versioning//:lib",
         "@sharpziplib//:lib",
         "@system.reflection.metadataloadcontext//:lib",
+        "@system.security.cryptography.pkcs//:lib"
     ],
 )
