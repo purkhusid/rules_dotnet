@@ -39,6 +39,7 @@ namespace nuget2bazel.rules
             await f.WriteLineAsync("load(\"@io_bazel_rules_dotnet//dotnet/private:rules/stdlib.bzl\", \"core_stdlib_internal\")");
             await f.WriteLineAsync("load(\"@io_bazel_rules_dotnet//dotnet/private:rules/libraryset.bzl\", \"core_libraryset\")");
             await f.WriteLineAsync();
+            await f.WriteLineAsync("# buildifier: disable=unnamed-macro");
             await f.WriteLineAsync("def define_runtime():");
             await f.WriteLineAsync("    \"Declares runtime\"");
 

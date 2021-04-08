@@ -3,6 +3,7 @@
 load("@io_bazel_rules_dotnet//dotnet/private:rules/stdlib.bzl", "core_stdlib_internal")
 load("@io_bazel_rules_dotnet//dotnet/private:rules/libraryset.bzl", "core_libraryset")
 
+# buildifier: disable=unnamed-macro
 def define_runtime():
     "Declares runtime"
     core_stdlib_internal(
