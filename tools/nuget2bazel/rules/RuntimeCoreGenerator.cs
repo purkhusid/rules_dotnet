@@ -35,10 +35,12 @@ namespace nuget2bazel.rules
             var sdkDirLinux = await ZipDownloader.DownloadIfNedeed(_configDir, sdk.LinuxUrl);
             var sdkDirOsx = await ZipDownloader.DownloadIfNedeed(_configDir, sdk.DarwinUrl);
 
+            await f.WriteLineAsync("\"\"");
             await f.WriteLineAsync("load(\"@io_bazel_rules_dotnet//dotnet/private:rules/stdlib.bzl\", \"core_stdlib_internal\")");
             await f.WriteLineAsync("load(\"@io_bazel_rules_dotnet//dotnet/private:rules/libraryset.bzl\", \"core_libraryset\")");
             await f.WriteLineAsync();
             await f.WriteLineAsync("def define_runtime():");
+            await f.WriteLineAsync("    \"Declares runtime\"");
 
             if (sdk.Packs != null)
             {

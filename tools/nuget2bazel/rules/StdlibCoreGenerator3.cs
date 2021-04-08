@@ -34,10 +34,12 @@ namespace nuget2bazel.rules
         private async Task GenerateBazelFile(string outpath, List<RefInfo> packRefs)
         {
             await using var f = new StreamWriter(outpath);
+            await f.WriteLineAsync("\"\"");
             await f.WriteLineAsync("load(\"@io_bazel_rules_dotnet//dotnet/private:rules/stdlib.bzl\", \"core_stdlib_internal\")");
             await f.WriteLineAsync("load(\"@io_bazel_rules_dotnet//dotnet/private:rules/libraryset.bzl\", \"core_libraryset\")");
             await f.WriteLineAsync();
             await f.WriteLineAsync("def define_stdlib():");
+            await f.WriteLineAsync("    \"Declares stdlib\"");
 
             int cnt = 0;
             foreach (var p in packRefs.Select(x => x.Pack).Distinct())

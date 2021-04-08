@@ -1,7 +1,9 @@
+""
 load("@io_bazel_rules_dotnet//dotnet/private:rules/stdlib.bzl", "core_stdlib_internal")
 load("@io_bazel_rules_dotnet//dotnet/private:rules/libraryset.bzl", "core_libraryset")
 
 def define_runtime():
+    "Declares runtime"
     core_stdlib_internal(
         name = "system.security.principal.windows.dll",
         version = "4.1.0.0",

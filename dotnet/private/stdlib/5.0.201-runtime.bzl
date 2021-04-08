@@ -1,7 +1,9 @@
+""
 load("@io_bazel_rules_dotnet//dotnet/private:rules/stdlib.bzl", "core_stdlib_internal")
 load("@io_bazel_rules_dotnet//dotnet/private:rules/libraryset.bzl", "core_libraryset")
 
 def define_runtime():
+    "Declares runtime"
     native.alias(name="system.security.accesscontrol.dll", actual=":p1_system.security.accesscontrol.dll")
     native.alias(name="system.security.principal.windows.dll", actual=":p1_system.security.principal.windows.dll")
     native.alias(name="microsoft.win32.registry.dll", actual=":p1_microsoft.win32.registry.dll")
