@@ -1,4 +1,5 @@
 ""
+
 load("@io_bazel_rules_dotnet//dotnet/private:rules/stdlib.bzl", "core_stdlib_internal")
 load("@io_bazel_rules_dotnet//dotnet/private:rules/libraryset.bzl", "core_libraryset")
 
@@ -168,7 +169,7 @@ def define_stdlib():
         ref = "@Microsoft.NETCore.App.2.0.7//:ref/netcoreapp2.0/System.Buffers.dll",
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Buffers.dll",
         deps = [
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.runtime.serialization.xml.dll",
@@ -179,7 +180,7 @@ def define_stdlib():
             ":system.runtime.dll",
             ":system.xml.readerwriter.dll",
             ":system.runtime.serialization.primitives.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.resources.resourcemanager.dll",
@@ -189,7 +190,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.runtime.interopservices.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.security.cryptography.primitives.dll",
@@ -198,7 +199,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Security.Cryptography.Primitives.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.drawing.primitives.dll",
@@ -208,7 +209,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.componentmodel.primitives.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.componentmodel.annotations.dll",
@@ -216,7 +217,7 @@ def define_stdlib():
         ref = "@Microsoft.NETCore.App.2.0.7//:ref/netcoreapp2.0/System.ComponentModel.Annotations.dll",
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.ComponentModel.Annotations.dll",
         deps = [
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.diagnostics.tracesource.dll",
@@ -227,7 +228,7 @@ def define_stdlib():
             ":system.runtime.dll",
             ":system.collections.nongeneric.dll",
             ":system.collections.specialized.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.collections.nongeneric.dll",
@@ -237,7 +238,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.runtime.extensions.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.reflection.emit.lightweight.dll",
@@ -247,7 +248,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.reflection.emit.ilgeneration.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.net.servicepoint.dll",
@@ -259,7 +260,7 @@ def define_stdlib():
             ":system.net.primitives.dll",
             ":system.security.cryptography.x509certificates.dll",
             ":system.net.security.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.net.sockets.dll",
@@ -269,7 +270,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.net.primitives.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.runtime.dll",
@@ -277,7 +278,7 @@ def define_stdlib():
         ref = "@Microsoft.NETCore.App.2.0.7//:ref/netcoreapp2.0/System.Runtime.dll",
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Runtime.dll",
         deps = [
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.io.filesystem.driveinfo.dll",
@@ -287,7 +288,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.io.filesystem.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.drawing.dll",
@@ -298,7 +299,7 @@ def define_stdlib():
             ":system.runtime.dll",
             ":system.drawing.primitives.dll",
             ":system.componentmodel.typeconverter.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.diagnostics.textwritertracelistener.dll",
@@ -309,7 +310,7 @@ def define_stdlib():
             ":system.runtime.dll",
             ":system.runtime.extensions.dll",
             ":system.diagnostics.tracesource.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.xml.xdocument.dll",
@@ -320,7 +321,7 @@ def define_stdlib():
             ":system.runtime.dll",
             ":system.xml.readerwriter.dll",
             ":system.runtime.extensions.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.threading.thread.dll",
@@ -332,7 +333,7 @@ def define_stdlib():
             ":system.threading.dll",
             ":system.security.principal.dll",
             ":system.runtime.extensions.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.io.unmanagedmemorystream.dll",
@@ -342,7 +343,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.runtime.interopservices.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.numerics.dll",
@@ -353,7 +354,7 @@ def define_stdlib():
             ":system.runtime.dll",
             ":system.runtime.numerics.dll",
             ":system.numerics.vectors.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.net.httplistener.dll",
@@ -371,7 +372,7 @@ def define_stdlib():
             ":system.security.cryptography.x509certificates.dll",
             ":system.net.webheadercollection.dll",
             ":system.net.websockets.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.threading.tasks.parallel.dll",
@@ -381,7 +382,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.collections.concurrent.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.linq.parallel.dll",
@@ -393,7 +394,7 @@ def define_stdlib():
             ":system.collections.concurrent.dll",
             ":system.linq.dll",
             ":system.collections.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.threading.timer.dll",
@@ -402,7 +403,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Threading.Timer.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.io.isolatedstorage.dll",
@@ -411,7 +412,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.IO.IsolatedStorage.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.xml.xmlserializer.dll",
@@ -424,7 +425,7 @@ def define_stdlib():
             ":system.xml.readerwriter.dll",
             ":system.collections.nongeneric.dll",
             ":system.runtime.extensions.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.web.dll",
@@ -434,7 +435,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.web.httputility.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.globalization.calendars.dll",
@@ -443,7 +444,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Globalization.Calendars.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.componentmodel.composition.dll",
@@ -452,7 +453,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.ComponentModel.Composition.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.threading.tasks.dataflow.dll",
@@ -460,7 +461,7 @@ def define_stdlib():
         ref = "@Microsoft.NETCore.App.2.0.7//:ref/netcoreapp2.0/System.Threading.Tasks.Dataflow.dll",
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Threading.Tasks.Dataflow.dll",
         deps = [
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.text.regularexpressions.dll",
@@ -470,7 +471,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.runtime.extensions.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.net.security.dll",
@@ -483,7 +484,7 @@ def define_stdlib():
             ":system.collections.nongeneric.dll",
             ":system.security.cryptography.x509certificates.dll",
             ":system.security.principal.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.net.nameresolution.dll",
@@ -493,7 +494,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.net.primitives.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.threading.threadpool.dll",
@@ -503,7 +504,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.threading.overlapped.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "netstandard.dll",
@@ -597,7 +598,7 @@ def define_stdlib():
             ":system.xml.xmlserializer.dll",
             ":system.xml.xpath.xdocument.dll",
             ":system.xml.xpath.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.console.dll",
@@ -607,7 +608,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.runtime.extensions.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.net.webproxy.dll",
@@ -618,7 +619,7 @@ def define_stdlib():
             ":system.runtime.dll",
             ":system.net.primitives.dll",
             ":system.runtime.extensions.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.runtime.interopservices.dll",
@@ -627,7 +628,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Runtime.InteropServices.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.transactions.dll",
@@ -637,7 +638,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.transactions.local.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.reflection.extensions.dll",
@@ -646,7 +647,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Reflection.Extensions.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "mscorlib.dll",
@@ -695,7 +696,7 @@ def define_stdlib():
             ":system.threading.threadpool.dll",
             ":system.threading.tasks.parallel.dll",
             ":system.threading.timer.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.io.dll",
@@ -705,7 +706,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.runtime.extensions.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.componentmodel.primitives.dll",
@@ -716,7 +717,7 @@ def define_stdlib():
             ":system.runtime.dll",
             ":system.collections.nongeneric.dll",
             ":system.componentmodel.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.collections.specialized.dll",
@@ -726,7 +727,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.runtime.extensions.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.valuetuple.dll",
@@ -735,7 +736,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.ValueTuple.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.security.cryptography.x509certificates.dll",
@@ -750,7 +751,7 @@ def define_stdlib():
             ":system.security.cryptography.encoding.dll",
             ":system.net.primitives.dll",
             ":system.collections.nongeneric.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.runtime.serialization.formatters.dll",
@@ -760,7 +761,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.collections.nongeneric.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.runtime.serialization.primitives.dll",
@@ -769,7 +770,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Runtime.Serialization.Primitives.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.runtime.serialization.json.dll",
@@ -780,7 +781,7 @@ def define_stdlib():
             ":system.runtime.dll",
             ":system.runtime.serialization.xml.dll",
             ":system.xml.readerwriter.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.core.dll",
@@ -802,7 +803,7 @@ def define_stdlib():
             ":system.security.cryptography.x509certificates.dll",
             ":system.threading.dll",
             ":system.threading.tasks.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.resources.reader.dll",
@@ -812,7 +813,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.resources.resourcemanager.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.security.principal.dll",
@@ -821,7 +822,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Security.Principal.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.net.requests.dll",
@@ -837,7 +838,7 @@ def define_stdlib():
             ":system.net.servicepoint.dll",
             ":system.net.security.dll",
             ":system.security.principal.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.componentmodel.dll",
@@ -846,7 +847,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.ComponentModel.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.text.encoding.extensions.dll",
@@ -855,7 +856,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Text.Encoding.Extensions.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "microsoft.visualbasic.dll",
@@ -863,7 +864,7 @@ def define_stdlib():
         ref = "@Microsoft.NETCore.App.2.0.7//:ref/netcoreapp2.0/Microsoft.VisualBasic.dll",
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/Microsoft.VisualBasic.dll",
         deps = [
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.reflection.primitives.dll",
@@ -872,7 +873,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Reflection.Primitives.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.transactions.local.dll",
@@ -881,7 +882,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Transactions.Local.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.linq.dll",
@@ -891,7 +892,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.collections.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.io.filesystem.primitives.dll",
@@ -900,7 +901,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.IO.FileSystem.Primitives.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.diagnostics.process.dll",
@@ -915,7 +916,7 @@ def define_stdlib():
             ":system.diagnostics.fileversioninfo.dll",
             ":system.collections.nongeneric.dll",
             ":system.collections.specialized.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.xml.dll",
@@ -927,7 +928,7 @@ def define_stdlib():
             ":system.xml.readerwriter.dll",
             ":system.xml.xmlserializer.dll",
             ":system.xml.xpath.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.runtime.loader.dll",
@@ -936,7 +937,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Runtime.Loader.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.net.webclient.dll",
@@ -951,7 +952,7 @@ def define_stdlib():
             ":system.net.webheadercollection.dll",
             ":system.collections.specialized.dll",
             ":system.net.requests.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.componentmodel.typeconverter.dll",
@@ -966,7 +967,7 @@ def define_stdlib():
             ":system.runtime.extensions.dll",
             ":system.collections.nongeneric.dll",
             ":system.resources.writer.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.io.compression.zipfile.dll",
@@ -976,7 +977,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.io.compression.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.web.httputility.dll",
@@ -987,7 +988,7 @@ def define_stdlib():
             ":system.runtime.dll",
             ":system.runtime.extensions.dll",
             ":system.collections.specialized.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.threading.overlapped.dll",
@@ -996,7 +997,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Threading.Overlapped.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.linq.expressions.dll",
@@ -1006,7 +1007,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.objectmodel.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.security.cryptography.algorithms.dll",
@@ -1018,7 +1019,7 @@ def define_stdlib():
             ":system.security.cryptography.primitives.dll",
             ":system.security.cryptography.encoding.dll",
             ":system.runtime.extensions.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.threading.tasks.extensions.dll",
@@ -1028,7 +1029,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.threading.tasks.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.configuration.dll",
@@ -1037,7 +1038,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Configuration.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.io.memorymappedfiles.dll",
@@ -1047,7 +1048,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.runtime.interopservices.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.security.cryptography.encoding.dll",
@@ -1057,7 +1058,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.security.cryptography.primitives.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.threading.dll",
@@ -1066,7 +1067,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Threading.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.runtime.extensions.dll",
@@ -1076,7 +1077,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.security.principal.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.componentmodel.eventbasedasync.dll",
@@ -1088,7 +1089,7 @@ def define_stdlib():
             ":system.threading.dll",
             ":system.componentmodel.primitives.dll",
             ":system.componentmodel.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.appcontext.dll",
@@ -1097,7 +1098,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.AppContext.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.reflection.metadata.dll",
@@ -1107,7 +1108,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.collections.immutable.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.data.dll",
@@ -1117,7 +1118,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.data.common.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.io.pipes.dll",
@@ -1127,7 +1128,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.security.principal.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.diagnostics.stacktrace.dll",
@@ -1136,7 +1137,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Diagnostics.StackTrace.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.text.encoding.dll",
@@ -1145,7 +1146,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Text.Encoding.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.diagnostics.contracts.dll",
@@ -1154,7 +1155,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Diagnostics.Contracts.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.net.ping.dll",
@@ -1166,7 +1167,7 @@ def define_stdlib():
             ":system.componentmodel.primitives.dll",
             ":system.net.primitives.dll",
             ":system.componentmodel.eventbasedasync.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.security.claims.dll",
@@ -1177,7 +1178,7 @@ def define_stdlib():
             ":system.runtime.dll",
             ":system.security.principal.dll",
             ":system.runtime.extensions.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.runtime.handles.dll",
@@ -1186,7 +1187,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Runtime.Handles.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.runtime.serialization.dll",
@@ -1198,7 +1199,7 @@ def define_stdlib():
             ":system.runtime.serialization.primitives.dll",
             ":system.runtime.serialization.xml.dll",
             ":system.runtime.serialization.json.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.runtime.interopservices.windowsruntime.dll",
@@ -1207,7 +1208,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Runtime.InteropServices.WindowsRuntime.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.diagnostics.tools.dll",
@@ -1216,7 +1217,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Diagnostics.Tools.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.servicemodel.web.dll",
@@ -1226,7 +1227,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.runtime.serialization.json.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.reflection.emit.dll",
@@ -1237,7 +1238,7 @@ def define_stdlib():
             ":system.runtime.dll",
             ":system.reflection.emit.ilgeneration.dll",
             ":system.reflection.primitives.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.net.mail.dll",
@@ -1251,7 +1252,7 @@ def define_stdlib():
             ":system.security.cryptography.x509certificates.dll",
             ":system.net.primitives.dll",
             ":system.net.servicepoint.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.xml.xmldocument.dll",
@@ -1261,7 +1262,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.xml.readerwriter.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.collections.dll",
@@ -1270,7 +1271,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Collections.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.runtime.numerics.dll",
@@ -1279,7 +1280,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Runtime.Numerics.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.diagnostics.fileversioninfo.dll",
@@ -1288,7 +1289,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Diagnostics.FileVersionInfo.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.runtime.interopservices.runtimeinformation.dll",
@@ -1297,7 +1298,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Runtime.InteropServices.RuntimeInformation.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.xml.xpath.dll",
@@ -1308,7 +1309,7 @@ def define_stdlib():
             ":system.runtime.dll",
             ":system.xml.readerwriter.dll",
             ":system.runtime.extensions.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.reflection.emit.ilgeneration.dll",
@@ -1318,7 +1319,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.reflection.primitives.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.serviceprocess.dll",
@@ -1327,7 +1328,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.ServiceProcess.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.diagnostics.diagnosticsource.dll",
@@ -1335,7 +1336,7 @@ def define_stdlib():
         ref = "@Microsoft.NETCore.App.2.0.7//:ref/netcoreapp2.0/System.Diagnostics.DiagnosticSource.dll",
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Diagnostics.DiagnosticSource.dll",
         deps = [
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.data.common.dll",
@@ -1351,7 +1352,7 @@ def define_stdlib():
             ":system.componentmodel.dll",
             ":system.xml.readerwriter.dll",
             ":system.transactions.local.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.net.websockets.dll",
@@ -1364,7 +1365,7 @@ def define_stdlib():
             ":system.net.primitives.dll",
             ":system.security.principal.dll",
             ":microsoft.win32.primitives.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.io.filesystem.watcher.dll",
@@ -1374,7 +1375,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.componentmodel.primitives.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.reflection.typeextensions.dll",
@@ -1382,7 +1383,7 @@ def define_stdlib():
         ref = "@Microsoft.NETCore.App.2.0.7//:ref/netcoreapp2.0/System.Reflection.TypeExtensions.dll",
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Reflection.TypeExtensions.dll",
         deps = [
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.windows.dll",
@@ -1392,7 +1393,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.objectmodel.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.threading.tasks.dll",
@@ -1401,7 +1402,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Threading.Tasks.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.net.http.dll",
@@ -1412,7 +1413,7 @@ def define_stdlib():
             ":system.runtime.dll",
             ":system.net.primitives.dll",
             ":system.security.cryptography.x509certificates.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "windowsbase.dll",
@@ -1422,7 +1423,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.objectmodel.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.componentmodel.dataannotations.dll",
@@ -1432,7 +1433,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.componentmodel.annotations.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.net.websockets.client.dll",
@@ -1444,7 +1445,7 @@ def define_stdlib():
             ":system.net.websockets.dll",
             ":system.security.cryptography.x509certificates.dll",
             ":system.net.primitives.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "microsoft.csharp.dll",
@@ -1452,7 +1453,7 @@ def define_stdlib():
         ref = "@Microsoft.NETCore.App.2.0.7//:ref/netcoreapp2.0/Microsoft.CSharp.dll",
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/Microsoft.CSharp.dll",
         deps = [
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.xml.linq.dll",
@@ -1463,7 +1464,7 @@ def define_stdlib():
             ":system.runtime.dll",
             ":system.xml.xdocument.dll",
             ":system.xml.xpath.xdocument.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.io.compression.filesystem.dll",
@@ -1473,7 +1474,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.io.compression.zipfile.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.security.cryptography.csp.dll",
@@ -1485,7 +1486,7 @@ def define_stdlib():
             ":system.runtime.interopservices.dll",
             ":system.security.cryptography.algorithms.dll",
             ":system.security.cryptography.primitives.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.security.securestring.dll",
@@ -1495,7 +1496,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.runtime.interopservices.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.linq.queryable.dll",
@@ -1506,7 +1507,7 @@ def define_stdlib():
             ":system.runtime.dll",
             ":system.linq.expressions.dll",
             ":system.linq.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.dll",
@@ -1555,7 +1556,7 @@ def define_stdlib():
             ":system.text.regularexpressions.dll",
             ":system.threading.dll",
             ":system.threading.thread.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.collections.concurrent.dll",
@@ -1564,7 +1565,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Collections.Concurrent.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.xml.readerwriter.dll",
@@ -1577,7 +1578,7 @@ def define_stdlib():
             ":system.diagnostics.debug.dll",
             ":system.net.primitives.dll",
             ":system.collections.nongeneric.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.xml.serialization.dll",
@@ -1588,7 +1589,7 @@ def define_stdlib():
             ":system.runtime.dll",
             ":system.xml.readerwriter.dll",
             ":system.xml.xmlserializer.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.diagnostics.tracing.dll",
@@ -1597,7 +1598,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Diagnostics.Tracing.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.numerics.vectors.dll",
@@ -1606,7 +1607,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Numerics.Vectors.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.dynamic.runtime.dll",
@@ -1616,7 +1617,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.linq.expressions.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.resources.writer.dll",
@@ -1625,7 +1626,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Resources.Writer.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.objectmodel.dll",
@@ -1635,7 +1636,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.collections.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.reflection.dll",
@@ -1644,7 +1645,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Reflection.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.diagnostics.debug.dll",
@@ -1653,7 +1654,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Diagnostics.Debug.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.collections.immutable.dll",
@@ -1663,7 +1664,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.collections.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.io.filesystem.dll",
@@ -1673,7 +1674,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.runtime.extensions.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.io.compression.dll",
@@ -1682,7 +1683,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.IO.Compression.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.net.primitives.dll",
@@ -1693,7 +1694,7 @@ def define_stdlib():
             ":system.runtime.dll",
             ":system.runtime.interopservices.dll",
             ":microsoft.win32.primitives.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.net.networkinformation.dll",
@@ -1704,7 +1705,7 @@ def define_stdlib():
             ":system.runtime.dll",
             ":system.net.primitives.dll",
             ":microsoft.win32.primitives.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.xml.xpath.xdocument.dll",
@@ -1715,7 +1716,7 @@ def define_stdlib():
             ":system.runtime.dll",
             ":system.xml.readerwriter.dll",
             ":system.xml.xdocument.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.net.webheadercollection.dll",
@@ -1725,7 +1726,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.collections.specialized.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "microsoft.win32.primitives.dll",
@@ -1734,7 +1735,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/Microsoft.Win32.Primitives.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.runtime.compilerservices.visualc.dll",
@@ -1743,7 +1744,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Runtime.CompilerServices.VisualC.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.net.dll",
@@ -1758,7 +1759,7 @@ def define_stdlib():
             ":system.net.requests.dll",
             ":system.net.networkinformation.dll",
             ":system.net.sockets.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.reflection.dispatchproxy.dll",
@@ -1766,7 +1767,7 @@ def define_stdlib():
         ref = "@Microsoft.NETCore.App.2.0.7//:ref/netcoreapp2.0/System.Reflection.DispatchProxy.dll",
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Reflection.DispatchProxy.dll",
         deps = [
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.globalization.extensions.dll",
@@ -1776,7 +1777,7 @@ def define_stdlib():
         deps = [
             ":system.runtime.dll",
             ":system.runtime.extensions.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.globalization.dll",
@@ -1785,7 +1786,7 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Globalization.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.security.dll",
@@ -1794,5 +1795,5 @@ def define_stdlib():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.0.7/System.Security.dll",
         deps = [
             ":system.runtime.dll",
-        ]
+        ],
     )

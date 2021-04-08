@@ -1,4 +1,5 @@
 ""
+
 load("@io_bazel_rules_dotnet//dotnet/private:rules/stdlib.bzl", "core_stdlib_internal")
 load("@io_bazel_rules_dotnet//dotnet/private:rules/libraryset.bzl", "core_libraryset")
 
@@ -20,7 +21,7 @@ def define_runtime():
             ":system.threading.dll",
             ":system.diagnostics.debug.dll",
             ":microsoft.win32.primitives.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.security.cryptography.openssl.dll",
@@ -34,7 +35,7 @@ def define_runtime():
             ":system.runtime.extensions.dll",
             ":system.security.cryptography.algorithms.dll",
             ":system.security.cryptography.primitives.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.security.cryptography.cng.dll",
@@ -52,7 +53,7 @@ def define_runtime():
             ":system.collections.concurrent.dll",
             ":system.buffers.dll",
             ":system.memory.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.security.accesscontrol.dll",
@@ -70,7 +71,7 @@ def define_runtime():
             ":system.threading.thread.dll",
             ":system.collections.nongeneric.dll",
             ":microsoft.win32.primitives.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.private.xml.linq.dll",
@@ -88,7 +89,7 @@ def define_runtime():
             ":system.threading.dll",
             ":system.threading.tasks.dll",
             ":system.linq.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.private.xml.dll",
@@ -124,7 +125,7 @@ def define_runtime():
             ":system.threading.thread.dll",
             ":system.linq.dll",
             ":system.io.filesystem.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.private.uri.dll",
@@ -133,7 +134,7 @@ def define_runtime():
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.2.7/System.Private.Uri.dll",
         deps = [
             ":system.private.corelib.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.private.datacontractserialization.dll",
@@ -161,7 +162,7 @@ def define_runtime():
             ":system.text.regularexpressions.dll",
             ":system.xml.xdocument.dll",
             ":system.collections.specialized.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.private.corelib.dll",
@@ -169,7 +170,7 @@ def define_runtime():
         ref = ":core/shared/Microsoft.NETCore.App/2.2.7/System.Private.CoreLib.dll",
         stdlib_path = ":core/shared/Microsoft.NETCore.App/2.2.7/System.Private.CoreLib.dll",
         deps = [
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.io.pipes.accesscontrol.dll",
@@ -180,7 +181,7 @@ def define_runtime():
             ":system.runtime.dll",
             ":system.resources.resourcemanager.dll",
             ":system.io.pipes.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "system.io.filesystem.accesscontrol.dll",
@@ -195,7 +196,7 @@ def define_runtime():
             ":system.security.accesscontrol.dll",
             ":system.security.principal.windows.dll",
             ":system.collections.nongeneric.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "sos.netcore.dll",
@@ -212,7 +213,7 @@ def define_runtime():
             ":system.diagnostics.debug.dll",
             ":system.runtime.extensions.dll",
             ":system.io.filesystem.dll",
-        ]
+        ],
     )
     core_stdlib_internal(
         name = "microsoft.win32.registry.dll",
@@ -229,7 +230,7 @@ def define_runtime():
             ":system.collections.dll",
             ":system.buffers.dll",
             ":system.memory.dll",
-        ]
+        ],
     )
 
     core_libraryset(
