@@ -64,12 +64,6 @@ namespace nuget2bazel
 
             var projectContext = new ProjectContext(settings);
 
-            var actions = await packageManager.PreviewInstallPackageAsync(packageManager.PackagesFolderNuGetProject,
-                identity, resolutionContext, projectContext, sourceRepository,
-                sourceRepositoryProvider.GetRepositories(),
-                CancellationToken.None);
-            project.NuGetProjectActions = actions;
-
             await packageManager.InstallPackageAsync(packageManager.PackagesFolderNuGetProject,
                 identity, resolutionContext, projectContext, sourceRepository,
                 sourceRepositoryProvider.GetRepositories(),
