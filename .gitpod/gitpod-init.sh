@@ -6,7 +6,6 @@ if [[ -n "${GITPOD_WORKSPACE_URL}" ]]; then
         rm .bazelrc.user
     fi
 
-    cp -R /home/gitpod/dotnet /tmp/dotnet
     cat <<EOT >> .bazelrc.user
 build --disk_cache=/workspace/bazel-disk-cache
 build --repository_cache=/workspace/bazel-repository-cache
