@@ -38,6 +38,13 @@ http_archive(
     ],
 )
 
+load("//dotnet:repositories.bzl", dotnet_register_toolchains2 = "dotnet_register_toolchains", "rules_dotnet_dependencies")
+rules_dotnet_dependencies()
+
+dotnet_register_toolchains2(
+    name = "dotnet_test",
+    dotnet_version = "6.0.101",
+)
 # Creates a default toolchain config for RBE.
 # Use this as is if you are using the rbe_ubuntu16_04 container,
 # otherwise refer to RBE docs.

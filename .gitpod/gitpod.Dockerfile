@@ -7,20 +7,13 @@ FROM gitpod/workspace-base
 # Source: https://docs.microsoft.com/dotnet/core/install/linux-scripted-manual#scripted-install
 USER gitpod
 ENV DOTNET_VERSION=5.0
-RUN mkdir -p /home/gitpod/dotnet && curl -fsSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel ${DOTNET_VERSION} --install-dir /home/gitpod/dotnet
-# This is a workaround until this bug has been resolved: https://github.com/gitpod-io/gitpod/issues/5090
-# We copy the .Net installation to /tmp/dotnet in our prebuild script
-# Once the bug has been fixed we should change the envs and remove the prebuild workaround
-#ENV DOTNET_ROOT=/home/gitpod/dotnet
-#ENV PATH=$PATH:/home/gitpod/dotnet
-RUN cp -R /home/gitpod/dotnet /tmp/dotnet
-ENV DOTNET_ROOT=/tmp/dotnet
-ENV PATH=$PATH:/tmp/dotnet
-
-# Install global .Net tools
-RUN dotnet tool install -g fantomas-tool \
-  && dotnet tool install -g paket
+ENV DOTNET_ROOT=/home/gitpod/dotnet
+ENV NUGET_PACKAGES=/workspace/nuget_cache
+ENV PATH=$PATH:$DOTNET_ROOT
 ENV PATH=$PATH:/home/gitpod/.dotnet/tools
+RUN mkdir -p $DOTNET_ROOT && curl -fsSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel $DOTNET_VERSION --install-dir $DOTNET_ROOT
+RUN dotnet tool install --global --version 4.6.0-alpha-009 fantomas-tool
+RUN dotnet tool install --global paket
 
 ##############
 ### Docker ###
