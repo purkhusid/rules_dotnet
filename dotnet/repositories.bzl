@@ -37,10 +37,6 @@ _ATTRS = {
 }
 
 def _dotnet_repo_impl(repository_ctx):
-    url = "https://github.com/someorg/someproject/releases/download/v{0}/dotnet-{1}.zip".format(
-        repository_ctx.attr.dotnet_version,
-        repository_ctx.attr.platform,
-    )
     repository_ctx.download_and_extract(
         url = TOOL_VERSIONS[repository_ctx.attr.dotnet_version][repository_ctx.attr.platform]["url"],
         integrity = TOOL_VERSIONS[repository_ctx.attr.dotnet_version][repository_ctx.attr.platform]["hash"],
