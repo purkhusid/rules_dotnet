@@ -1,0 +1,51 @@
+load("//transition_test:defs.bzl", "fsharp_library", "fsharp_binary")
+load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
+
+string_flag(
+    name = "tfm_flag",
+    values = ["netstandard2.1", "netcoreapp3.1", "net5.0", "net6.0"],
+    build_setting_default = "net6.0",
+)
+
+
+fsharp_library(
+    name = "lib_a",
+    srcs = ["liba.fs"],
+    deps = [],
+    target_frameworks = ["netstandard2.1", "netcoreapp3.1", "net6.0"]
+)
+
+fsharp_library(
+    name = "lib_b",
+    srcs = ["libb.fs"],
+    deps = [":lib_a"],
+    target_frameworks = ["net5.0"]
+)
+
+fsharp_library(
+    name = "lib_c",
+    srcs = ["libc.fs"],
+    deps = [":lib_b"],
+    target_frameworks = ["net5.0", "net6.0"]
+)
+
+fsharp_binary(
+    name = "bin_a",
+    srcs = ["bina.cs"],
+    deps = ["//:lib_b"],
+    target_framework = "net5.0",
+)
+
+fsharp_binary(
+    name = "bin_b",
+    srcs = ["binb.cs"],
+    deps = ["//:lib_b"],
+    target_framework = "netcoreapp3.1",
+)
+
+fsharp_binary(
+    name = "bin_c",
+    srcs = ["binc.cs"],
+    deps = ["//:lib_b"],
+    target_framework = "net5.0",
+)

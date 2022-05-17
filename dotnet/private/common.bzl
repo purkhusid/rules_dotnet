@@ -120,3 +120,29 @@ def fill_in_missing_frameworks(name, providers):
 
 def get_analyzer_dll(analyzer_target):
     return analyzer_target[DotnetAssemblyInfo["netstandard"]]
+
+def get_highest_compatible_target_framework(incoming_tfm, tfms):
+    """Returns the highest compatible framework version for the incoming_tfm.
+    
+    Args:
+      incoming_tfm: The target framework of the incoming binary
+      tfms: A list of target frameworks
+    Returns:
+        The highest compatible framework version
+    """
+    ordered_tfms = reversed([tfm for tfm in FRAMEWORK_COMPATIBILITY.keys() if tfm in tfms])
+
+    if incoming_tfm in tfms:
+        return incoming_tfm
+
+    print(ordered_tfms)
+    for tfm in FRAMEWORK_COMPATIBILITY[incoming_tfm]:
+        print("TFM: {}".format(tfm))
+        if tfm in tfms:
+            return tfm
+        for inner_tfm in FRAMEWORK_COMPATIBILITY[tfm]:
+            print("INNER_TFM: {}".format(inner_tfm))
+            if inner_tfm in tfms:
+                return inner_tfm
+
+    return None
