@@ -27,9 +27,10 @@ tfm_transition = transition(
 def _fsharp_library_impl(ctx):
     inputs = []
     for dep in ctx.attr.deps:
+        print("DEP {0}: {1}".format(ctx.label.name, dep))
         inputs.extend(dep.files.to_list())
 
-    output = ctx.actions.declare_file("%s/%s" % (ctx.attr._target_framework[BuildSettingInfo].value, ctx.label.name))
+    output = ctx.actions.declare_file("%s/%s/output" % (ctx.label.name, ctx.attr._target_framework[BuildSettingInfo].value))
     command = """
 echo Label {1} TFM was: {2} > {0}
 for i in {3}; do cat $i >> {0}; done
