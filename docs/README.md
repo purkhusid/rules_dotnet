@@ -305,6 +305,28 @@ which produces a single executable already.
 The output from `publish_binary` can easily be used to build container images.
 See the [container image example](../examples/container_image) for how to do this with `rules_img`.
 
+## Publish disk usage
+
+Every `publish_binary` copies everything it publishes into its own directory:
+the runtime pack of a self-contained publish, every NuGet package and every
+library. Its container layers are a second copy. A repository with many
+publishes therefore holds many copies of the same files.
+`--@rules_dotnet//dotnet/settings:publish_file_mode` chooses how files get there:
+
+- `copy` (the default): every file is copied.
+- `hardlink`: files are hard linked, and copied wherever that fails, such as
+  across filesystems or on Windows. The outputs are still regular files. Bazel
+  makes its outputs read-only, and a hard link shares its permissions with the
+  file it links, so the NuGet packages and runtime packs Bazel downloaded
+  become read-only too. The build after the one that changed them checks their
+  dependents again, without rebuilding them. This saves nothing with remote
+  execution, where outputs are downloaded as files of their own.
+- `symlink`: the publish directory holds symlinks Bazel creates, apart from
+  the application's own assembly, which the apphost resolves to find the rest
+  of the application. Copy the directory with `cp -rL` rather than `cp -r` to
+  take the files rather than the links. The container layers are hard linked,
+  as above, because packaging rules read them as plain directories.
+
 ## IDE Support
 
 Currently the rules do not support IDE support out of the box so for

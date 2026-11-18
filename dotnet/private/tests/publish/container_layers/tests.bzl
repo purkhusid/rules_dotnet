@@ -17,8 +17,9 @@ _NOT_WINDOWS = select({
     "//conditions:default": [],
 })
 
-# The actions that fill the publish directory itself.
-_PUBLISH_COPIES = ["DotnetPublishCopy", "DotnetCopySidecars"]
+# The actions that fill the publish directory itself: `Symlink` under
+# `--@rules_dotnet//dotnet/settings:publish_file_mode=symlink`.
+_PUBLISH_COPIES = ["DotnetPublishCopy", "DotnetCopySidecars", "Symlink"]
 
 def _actions(target, mnemonics):
     return [action for action in target[TestingAspectInfo].actions if action.mnemonic in mnemonics]

@@ -5,6 +5,7 @@ Rule for assembling the publish output of a .NET binary.
 load("@bazel_skylib//lib:dicts.bzl", "dicts")
 load("@bazel_skylib//lib:paths.bzl", "paths")
 load("@bazel_skylib//lib:shell.bzl", "shell")
+load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 load("@rules_cc//cc:action_names.bzl", "CPP_LINK_EXECUTABLE_ACTION_NAME")
 load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
 load("//dotnet/private:common.bzl", "generate_depsjson", "generate_runtimeconfig", "get_toolchain", "is_from_nuget_package", "tfm_to_semver", "tfm_version", "to_rlocation_path")
@@ -48,7 +49,28 @@ load("//dotnet/private/transitions:tfm_transition.bzl", "publish_binary_transiti
 # the command line grows long enough to risk the execve argument limit.
 _COPY_BATCH = 128
 
-def _render_copy_script(copies, is_windows, directories = []):
+# Hard links a batch of files into a directory, copying them instead where the
+# filesystem cannot link them: across devices, as with a sandbox on tmpfs, or
+# on a filesystem without hard links. `-L` links what an input symlink points
+# at, never the symlink a sandbox stages the input as. A batch that fails part
+# way is copied whole, so whatever it linked is removed first: `cp` refuses to
+# copy a file onto a link to itself.
+_HARDLINK_FUNCTIONS = [
+    "place() {",
+    "  local dir=\"$1\" src",
+    "  shift",
+    "  ln -fL -- \"$@\" \"$dir\" 2>/dev/null && return 0",
+    "  for src in \"$@\"; do rm -f -- \"$dir/${src##*/}\"; done",
+    "  cp -f -- \"$@\" \"$dir\"",
+    "}",
+    "place_as() {",
+    "  ln -fL -- \"$1\" \"$2\" 2>/dev/null && return 0",
+    "  rm -f -- \"$2\"",
+    "  cp -f -- \"$1\" \"$2\"",
+    "}",
+]
+
+def _render_copy_script(copies, is_windows, directories = [], hardlink = False):
     """The script that puts every published file in its place.
 
     A self-contained publish copies the whole runtime pack, so one process per
@@ -60,11 +82,17 @@ def _render_copy_script(copies, is_windows, directories = []):
         copies: The (source, destination path) pairs to copy, one pair per destination.
         is_windows: Whether the script is a batch file rather than a shell script.
         directories: Directories to create even when no file lands in them.
+        hardlink: Whether to hard link the files where the filesystem allows,
+            rather than copy them. Ignored on Windows.
 
     Returns:
         A list of script lines.
     """
     script_body = ["@echo off"] if is_windows else ["#! /usr/bin/env bash", "set -eou pipefail"]
+    hardlink = hardlink and not is_windows
+
+    if hardlink:
+        script_body.extend(_HARDLINK_FUNCTIONS)
 
     # Grouped by destination directory, in first-seen order. A file published
     # under a different name cannot join a batch, but its directory is still
@@ -95,10 +123,12 @@ def _render_copy_script(copies, is_windows, directories = []):
         script_body.append("mkdir -p {dir}".format(dir = shell.quote(directory)))
 
         for start in range(0, len(sources), _COPY_BATCH):
-            script_body.append("cp -f {srcs} {dir}".format(
-                srcs = " ".join([shell.quote(src.path) for src in sources[start:start + _COPY_BATCH]]),
-                dir = shell.quote(directory),
-            ))
+            srcs = " ".join([shell.quote(src.path) for src in sources[start:start + _COPY_BATCH]])
+
+            if hardlink:
+                script_body.append("place {dir} {srcs}".format(srcs = srcs, dir = shell.quote(directory)))
+            else:
+                script_body.append("cp -f {srcs} {dir}".format(srcs = srcs, dir = shell.quote(directory)))
 
     for (src, dst) in renamed:
         if is_windows:
@@ -107,7 +137,11 @@ def _render_copy_script(copies, is_windows, directories = []):
                 dst = dst.replace("/", "\\"),
             ))
         else:
-            script_body.append("cp -f {src} {dst}".format(src = shell.quote(src.path), dst = shell.quote(dst)))
+            script_body.append("{cmd} {src} {dst}".format(
+                cmd = "place_as" if hardlink else "cp -f",
+                src = shell.quote(src.path),
+                dst = shell.quote(dst),
+            ))
 
     return script_body
 
@@ -696,6 +730,53 @@ def _ready_to_run_images(ctx, binary_info, assembly_files, runtime_pack_files, r
 
     return struct(replace = images, extra = [])
 
+def _file_mode(ctx):
+    """How files reach the publish: `copy`, `hardlink` or `symlink`.
+
+    See //dotnet/settings:publish_file_mode.
+    """
+    return ctx.attr._publish_file_mode[BuildSettingInfo].value
+
+def _place_files(ctx, copies, suffix, mnemonic, progress_message, real = None):
+    """Puts every (source, destination File) pair in place, as the mode says.
+
+    Symlinks are Bazel's own: one action per file, run inside Bazel rather
+    than as a process, which a remote build does not have to download for.
+    Anything else is one script for the lot.
+
+    Args:
+        ctx: The rule context.
+        copies: The (source, destination File) pairs.
+        suffix: Distinguishes this script from the target's other copy scripts.
+        mnemonic: The copy action's mnemonic.
+        progress_message: The copy action's progress message.
+        real: The one source that has to be a real file even among symlinks.
+            The apphost resolves the app's directory from the real path of the
+            assembly it starts, so a symlinked one points it at the
+            directory the assembly was compiled into, where no runtime is.
+
+    Returns:
+        The destination Files.
+    """
+    if _file_mode(ctx) != "symlink":
+        return _run_copy_script(ctx, copies, suffix, mnemonic, progress_message)
+
+    linked = [(src, dst) for (src, dst) in copies if src != real]
+    for (src, dst) in linked:
+        ctx.actions.symlink(output = dst, target_file = src, progress_message = progress_message)
+
+    placed = [dst for (_, dst) in linked]
+    if len(linked) < len(copies):
+        placed += _run_copy_script(
+            ctx,
+            [(src, dst) for (src, dst) in copies if src == real],
+            suffix,
+            mnemonic,
+            progress_message,
+        )
+
+    return placed
+
 def _run_copy_script(ctx, copies, suffix, mnemonic, progress_message, directory = None):
     """Runs one action that puts every (source, destination) pair in place.
 
@@ -734,7 +815,12 @@ def _run_copy_script(ctx, copies, suffix, mnemonic, progress_message, directory 
 
     ctx.actions.write(
         output = script,
-        content = ("\r\n" if is_windows else "\n").join(_render_copy_script(pairs, is_windows, directories)),
+        content = ("\r\n" if is_windows else "\n").join(_render_copy_script(
+            pairs,
+            is_windows,
+            directories,
+            hardlink = _file_mode(ctx) != "copy",
+        )),
         is_executable = True,
     )
     ctx.actions.run(
@@ -767,7 +853,7 @@ def _copy_beside(ctx, executable, layout):
     if not copies:
         return []
 
-    return _run_copy_script(
+    return _place_files(
         ctx,
         copies,
         "sidecars",
@@ -783,12 +869,13 @@ def _copy_to_publish(ctx, runtime_identifier, entries, binary_info):
         for (path, file) in entries.items()
     ]
 
-    outputs = _run_copy_script(
+    outputs = _place_files(
         ctx,
         copies,
         "copy",
         "DotnetPublishCopy",
         "Assembling publish output for %{label}",
+        real = entries[binary_info.dll.basename],
     )
 
     return (ctx.actions.declare_file("{}/{}".format(root, binary_info.dll.basename)), outputs)
@@ -1288,6 +1375,10 @@ Requires `single_file = True`.""",
 Mirrors MSBuild's `<EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>`.
 Requires `single_file = True`.""",
             default = False,
+        ),
+        "_publish_file_mode": attr.label(
+            default = "//dotnet/settings:publish_file_mode",
+            providers = [BuildSettingInfo],
         ),
         "_apphost_shimmer": attr.label(
             providers = [DotnetAssemblyCompileInfo, DotnetAssemblyRuntimeInfo],
