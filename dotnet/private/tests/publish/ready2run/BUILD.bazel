@@ -4,44 +4,50 @@ load(
     "//dotnet:defs.bzl",
     "publish_binary",
 )
+load("//dotnet/private/tests/publish:file_modes.bzl", "FILE_MODES", "publish_directory")
 load(":tests.bzl", "ready_to_run_test_suite")
 
 ready_to_run_test_suite(name = "ready_to_run_test_suite")
 
-publish_binary(
-    name = "ready2run",
-    binary = "//dotnet/private/tests/publish/app_to_publish",
-    ready_to_run = True,
-    self_contained = True,
-    target_framework = "net10.0",
-)
+[
+    publish_binary(
+        name = "ready2run" + suffix,
+        binary = "//dotnet/private/tests/publish/app_to_publish",
+        file_mode = file_mode,
+        ready_to_run = True,
+        self_contained = True,
+        target_framework = "net10.0",
+    )
+    for (suffix, file_mode) in FILE_MODES.items()
+]
 
 # We tar the output to because that way we can strip the
 # prefix of the files and avoid long path issues on Windows.
 # This also makes sure that it's possible to tar the output
 # of the publish without any problems
-pkg_tar(
-    name = "tar",
-    srcs = [":ready2run"],
-    include_runfiles = True,
-    mode = "0755",
-    package_dir = "/",
-    strip_prefix = select(
-        {
-            "//dotnet/private:linux-x64": "ready2run/publish/linux-x64",
-            "//dotnet/private:linux-arm64": "ready2run/publish/linux-arm64",
-            "//dotnet/private:osx-x64": "ready2run/publish/osx-x64",
-            "//dotnet/private:osx-arm64": "ready2run/publish/osx-arm64",
-            "//dotnet/private:windows-x64": "ready2run/publish/win-x64",
-            "//dotnet/private:windows-arm64": "ready2run/publish/win-arm64",
-        },
-    ),
-)
+[
+    pkg_tar(
+        name = "tar" + suffix,
+        srcs = [":ready2run" + suffix],
+        include_runfiles = True,
+        mode = "0755",
+        package_dir = "/",
+        strip_prefix = publish_directory("ready2run" + suffix),
+    )
+    for suffix in FILE_MODES
+]
 
-sh_test(
-    name = "ready2run_test",
-    srcs = [
-        "test.sh",
-    ],
-    data = [":tar"],
-)
+[
+    sh_test(
+        name = "ready2run{}_test".format(suffix),
+        srcs = [
+            "test.sh",
+        ],
+        args = ["$(rootpath :tar{})".format(suffix)],
+        data = [
+            ":tar" + suffix,
+            "//dotnet/private/tests/publish:expect_no_symlinks.sh",
+        ],
+    )
+    for suffix in FILE_MODES
+]

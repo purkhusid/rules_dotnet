@@ -5,6 +5,7 @@ Rule for assembling the publish output of a .NET binary.
 load("@bazel_skylib//lib:dicts.bzl", "dicts")
 load("@bazel_skylib//lib:paths.bzl", "paths")
 load("@bazel_skylib//lib:shell.bzl", "shell")
+load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 load("@rules_cc//cc:action_names.bzl", "CPP_LINK_EXECUTABLE_ACTION_NAME")
 load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
 load("//dotnet/private:common.bzl", "generate_depsjson", "generate_runtimeconfig", "get_toolchain", "is_from_nuget_package", "tfm_to_semver", "tfm_version", "to_rlocation_path")
@@ -696,6 +697,51 @@ def _ready_to_run_images(ctx, binary_info, assembly_files, runtime_pack_files, r
 
     return struct(replace = images, extra = [])
 
+def _file_mode(ctx):
+    """How the publish directory is filled: `copy` or `symlink`.
+
+    The target's own `file_mode` if it sets one, otherwise
+    //dotnet/settings:publish_file_mode.
+    """
+    return ctx.attr.file_mode or ctx.attr._publish_file_mode[BuildSettingInfo].value
+
+def _place_files(ctx, copies, suffix, mnemonic, progress_message, real = None):
+    """Puts every (source, destination File) pair in place, as the file mode says.
+
+    A copy is one script for every file. A symlink is Bazel's own: one action
+    per file, which Bazel performs itself rather than by starting a process.
+
+    Args:
+        ctx: The rule context.
+        copies: The (source, destination File) pairs.
+        suffix: Distinguishes this copy script from the target's others.
+        mnemonic: The copy action's mnemonic.
+        progress_message: The progress message of the copy and the symlinks.
+        real: A source copied even when the others are symlinked. The apphost
+            finds the application's directory from the real path of the
+            assembly it starts, so a symlink to that assembly would send it
+            to the directory the assembly was compiled into, where nothing
+            else of the publish is.
+
+    Returns:
+        The destination Files.
+    """
+    if _file_mode(ctx) == "copy":
+        return _run_copy_script(ctx, copies, suffix, mnemonic, progress_message)
+
+    copied = [(src, dst) for (src, dst) in copies if src == real]
+    linked = [(src, dst) for (src, dst) in copies if src != real]
+
+    for (src, dst) in linked:
+        ctx.actions.symlink(output = dst, target_file = src, progress_message = progress_message)
+
+    placed = [dst for (_, dst) in linked]
+
+    if copied:
+        placed += _run_copy_script(ctx, copied, suffix, mnemonic, progress_message)
+
+    return placed
+
 def _run_copy_script(ctx, copies, suffix, mnemonic, progress_message, directory = None):
     """Runs one action that puts every (source, destination) pair in place.
 
@@ -767,7 +813,7 @@ def _copy_beside(ctx, executable, layout):
     if not copies:
         return []
 
-    return _run_copy_script(
+    return _place_files(
         ctx,
         copies,
         "sidecars",
@@ -783,12 +829,13 @@ def _copy_to_publish(ctx, runtime_identifier, entries, binary_info):
         for (path, file) in entries.items()
     ]
 
-    outputs = _run_copy_script(
+    outputs = _place_files(
         ctx,
         copies,
         "copy",
         "DotnetPublishCopy",
         "Assembling publish output for %{label}",
+        real = entries[binary_info.dll.basename],
     )
 
     return (ctx.actions.declare_file("{}/{}".format(root, binary_info.dll.basename)), outputs)
@@ -1289,6 +1336,27 @@ Mirrors MSBuild's `<EnableCompressionInSingleFile>true</EnableCompressionInSingl
 Requires `single_file = True`.""",
             default = False,
         ),
+        "file_mode": attr.string(
+            doc = """How the publish directory is filled. Unset, the
+`--@rules_dotnet//dotnet/settings:publish_file_mode` flag decides, which
+defaults to `copy`.
+
+* `copy`: every published file is copied into the publish directory, so every
+  publish holds its own copy of the runtime pack and of every dependency.
+* `symlink`: every published file is a symlink Bazel creates to the file it
+  publishes, apart from the application's own assembly, which the apphost
+  resolves to find the rest of the application. Copy the directory with
+  `cp -rL` rather than `cp -r` to take the files rather than the links.
+  Packaging rules such as `pkg_tar` and rules_img's read the files, and the
+  container layers in the output groups hold copies either way.
+
+See docs/README.md#publish-disk-usage.""",
+            values = ["", "copy", "symlink"],
+        ),
+        "_publish_file_mode": attr.label(
+            default = "//dotnet/settings:publish_file_mode",
+            providers = [BuildSettingInfo],
+        ),
         "_apphost_shimmer": attr.label(
             providers = [DotnetAssemblyCompileInfo, DotnetAssemblyRuntimeInfo],
             executable = True,
@@ -1386,6 +1454,12 @@ def _publish_wasm(name, kwargs):
                 "A browser has no .NET host to be self-contained from, nothing to compile " +
                 "ahead of time for, and no runtime to roll forward onto.",
             )
+
+    if kwargs.pop("file_mode", None):
+        fail(
+            "{}: `file_mode` does not apply to a WebAssembly publish.\n".format(name) +
+            "A browser publish serves a static site rather than filling a publish directory.",
+        )
 
     kwargs.pop("runtime_identifier", None)
 

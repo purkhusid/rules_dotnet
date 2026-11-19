@@ -15,6 +15,10 @@ executable=$(basename "$1")
 single_layer=$2
 shift 2
 
+# The layers have to hold the published files, not symlinks into Bazel's output
+# tree, which a publish filled with symlinks would otherwise carry along.
+bash ./dotnet/private/tests/publish/expect_no_symlinks.sh "$single_layer" "$@"
+
 stacked="${TEST_TMPDIR}/stacked"
 single="${TEST_TMPDIR}/single"
 mkdir -p "$stacked" "$single"

@@ -4,40 +4,57 @@ load(
     "//dotnet:defs.bzl",
     "publish_binary",
 )
+load("//dotnet/private/tests/publish:file_modes.bzl", "FILE_MODES", "publish_directory")
 
-publish_binary(
-    name = "self_contained",
-    binary = "//dotnet/private/tests/publish/app_to_publish",
-    self_contained = True,
-    target_framework = "net10.0",
-)
+[
+    publish_binary(
+        name = "self_contained" + suffix,
+        binary = "//dotnet/private/tests/publish/app_to_publish",
+        file_mode = file_mode,
+        self_contained = True,
+        target_framework = "net10.0",
+    )
+    for (suffix, file_mode) in FILE_MODES.items()
+]
 
 # We tar the output to because that way we can strip the
 # prefix of the files and avoid long path issues on Windows.
 # This also makes sure that it's possible to tar the output
 # of the publish without any problems
-pkg_tar(
-    name = "tar",
-    srcs = [":self_contained"],
-    include_runfiles = True,
-    mode = "0755",
-    package_dir = "/",
-    strip_prefix = select(
-        {
-            "//dotnet/private:linux-x64": "self_contained/publish/linux-x64",
-            "//dotnet/private:linux-arm64": "self_contained/publish/linux-arm64",
-            "//dotnet/private:osx-x64": "self_contained/publish/osx-x64",
-            "//dotnet/private:osx-arm64": "self_contained/publish/osx-arm64",
-            "//dotnet/private:windows-x64": "self_contained/publish/win-x64",
-            "//dotnet/private:windows-arm64": "self_contained/publish/win-arm64",
-        },
-    ),
-)
+[
+    pkg_tar(
+        name = "tar" + suffix,
+        srcs = [":self_contained" + suffix],
+        include_runfiles = True,
+        mode = "0755",
+        package_dir = "/",
+        strip_prefix = publish_directory("self_contained" + suffix),
+    )
+    for suffix in FILE_MODES
+]
 
-sh_test(
-    name = "self_contained_test",
-    srcs = [
-        "test.sh",
-    ],
-    data = [":tar"],
-)
+[
+    sh_test(
+        name = "self_contained{}_test".format(suffix),
+        srcs = [
+            "test.sh",
+        ],
+        args = ["$(rootpath :tar{})".format(suffix)],
+        data = [
+            ":tar" + suffix,
+            "//dotnet/private/tests/publish:expect_no_symlinks.sh",
+        ],
+    )
+    for suffix in FILE_MODES
+]
+
+# Run where Bazel leaves the publish, as `bazel run` runs it.
+[
+    sh_test(
+        name = "self_contained{}_in_place_test".format(suffix),
+        srcs = ["//dotnet/private/tests/publish:run_in_place.sh"],
+        args = ["$(rootpath :self_contained{})".format(suffix)],
+        data = [":self_contained" + suffix],
+    )
+    for suffix in FILE_MODES
+]

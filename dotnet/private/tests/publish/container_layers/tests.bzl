@@ -17,8 +17,9 @@ _NOT_WINDOWS = select({
     "//conditions:default": [],
 })
 
-# The actions that fill the publish directory itself.
-_PUBLISH_COPIES = ["DotnetPublishCopy", "DotnetCopySidecars"]
+# The actions that fill the publish directory itself: `Symlink` with
+# `file_mode = "symlink"`.
+_PUBLISH_COPIES = ["DotnetPublishCopy", "DotnetCopySidecars", "Symlink"]
 
 def _actions(target, mnemonics):
     return [action for action in target[TestingAspectInfo].actions if action.mnemonic in mnemonics]
@@ -173,6 +174,17 @@ def _self_contained_test_impl(env, target):
         "data-file",
         _repo_mapping(target).basename,
     ])
+
+def _symlink_test(name):
+    _publish_test(name, _symlink_test_impl, file_mode = "symlink", self_contained = True)
+
+def _symlink_test_impl(env, target):
+    # A publish of symlinks still has layers of copies, made from the files
+    # the links point to: a packaging rule reads a layer as a plain directory,
+    # where a link would point back into Bazel's output tree.
+    _expect_layers_cover_the_publish(env, target)
+    _expect_layers_independent_of_the_publish_copy(env, target)
+    _expect_dependencies_layered(env, target, runtime = True)
 
 def _framework_dependent_test(name):
     _publish_test(name, _framework_dependent_test_impl, self_contained = False)
@@ -455,6 +467,7 @@ def container_layers_test_suite(name):
         name = name,
         tests = [
             _self_contained_test,
+            _symlink_test,
             _framework_dependent_test,
             _ready_to_run_test,
             _shared_ready_to_run_test,

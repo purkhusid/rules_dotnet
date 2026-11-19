@@ -1,4 +1,4 @@
-load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
 
 # A flag controlling if strict dependencies are enforced or not.
 bool_flag(
@@ -108,5 +108,22 @@ alias(
         "@platforms//os:linux": "//dotnet/private/icu",
         "//conditions:default": ":system_icu",
     }),
+    visibility = ["//visibility:public"],
+)
+
+# How `publish_binary` fills its publish directory, unless a target sets its
+# own `file_mode`. See docs/README.md#publish-disk-usage.
+#
+# * `copy`: every published file is copied.
+# * `symlink`: every published file is a symlink Bazel creates, apart from
+#   the application's own assembly.
+string_flag(
+    name = "publish_file_mode",
+    build_setting_default = "copy",
+    scope = "universal",
+    values = [
+        "copy",
+        "symlink",
+    ],
     visibility = ["//visibility:public"],
 )

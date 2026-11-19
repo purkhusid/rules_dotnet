@@ -1,4 +1,8 @@
-exports_files(["test_file_type_contains.sh"])
+exports_files([
+    "expect_no_symlinks.sh",
+    "run_in_place.sh",
+    "test_file_type_contains.sh",
+])
 
 # The platforms the cross-publishing tests target, shared so that the transition
 # and the publish under test agree on one definition.

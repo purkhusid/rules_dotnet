@@ -1,0 +1,3 @@
+load(":tests.bzl", "file_mode_test_suite")
+
+file_mode_test_suite(name = "file_mode_test_suite")

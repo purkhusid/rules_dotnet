@@ -305,6 +305,42 @@ which produces a single executable already.
 The output from `publish_binary` can easily be used to build container images.
 See the [container image example](../examples/container_image) for how to do this with `rules_img`.
 
+## Publish disk usage
+
+By default every `publish_binary` copies everything it publishes into its own
+directory: the runtime pack of a self-contained publish, every NuGet package
+and every library. A repository with many publishes therefore holds many
+copies of the same files.
+
+A publish can fill its directory with symlinks instead, which take no space of
+their own. Choose it for every publish with a flag:
+
+```
+common --@rules_dotnet//dotnet/settings:publish_file_mode=symlink
+```
+
+or for one publish, whatever the flag says, with its `file_mode` attribute:
+
+```python
+publish_binary(
+    name = "publish",
+    binary = ":app",
+    file_mode = "symlink",
+    self_contained = True,
+    target_framework = "net10.0",
+)
+```
+
+The application's own assembly is copied all the same. The apphost finds the
+rest of the application beside the real path of that assembly, so a symlink
+there would send it to where the assembly was compiled.
+
+Bazel creates the symlinks itself, without starting a process. Packaging rules such as `pkg_tar` and those of `rules_img` read the files the
+symlinks point to, and the container layers in the output groups are copies
+either way, so what they pack is the same in both modes. Copying the
+directory out of `bazel-bin` yourself is not: use `cp -rL` rather than
+`cp -r` to take the files rather than the links.
+
 ## IDE Support
 
 Currently the rules do not support IDE support out of the box so for

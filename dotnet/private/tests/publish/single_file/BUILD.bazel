@@ -4,42 +4,48 @@ load(
     "//dotnet:defs.bzl",
     "publish_binary",
 )
+load("//dotnet/private/tests/publish:file_modes.bzl", "FILE_MODES", "publish_directory")
 load(":tests.bzl", "single_file_test_suite")
 
 single_file_test_suite(name = "single_file_test_suite")
 
-publish_binary(
-    name = "single_file",
-    binary = "//dotnet/private/tests/publish/app_to_publish",
-    enable_compression_in_single_file = True,
-    include_native_libraries_for_self_extract = True,
-    self_contained = True,
-    single_file = True,
-    target_framework = "net10.0",
-)
+[
+    publish_binary(
+        name = "single_file" + suffix,
+        binary = "//dotnet/private/tests/publish/app_to_publish",
+        enable_compression_in_single_file = True,
+        file_mode = file_mode,
+        include_native_libraries_for_self_extract = True,
+        self_contained = True,
+        single_file = True,
+        target_framework = "net10.0",
+    )
+    for (suffix, file_mode) in FILE_MODES.items()
+]
 
-pkg_tar(
-    name = "tar",
-    srcs = [":single_file"],
-    include_runfiles = True,
-    mode = "0755",
-    package_dir = "/",
-    strip_prefix = select(
-        {
-            "//dotnet/private:linux-x64": "single_file/publish/linux-x64",
-            "//dotnet/private:linux-arm64": "single_file/publish/linux-arm64",
-            "//dotnet/private:osx-x64": "single_file/publish/osx-x64",
-            "//dotnet/private:osx-arm64": "single_file/publish/osx-arm64",
-            "//dotnet/private:windows-x64": "single_file/publish/win-x64",
-            "//dotnet/private:windows-arm64": "single_file/publish/win-arm64",
-        },
-    ),
-)
+[
+    pkg_tar(
+        name = "tar" + suffix,
+        srcs = [":single_file" + suffix],
+        include_runfiles = True,
+        mode = "0755",
+        package_dir = "/",
+        strip_prefix = publish_directory("single_file" + suffix),
+    )
+    for suffix in FILE_MODES
+]
 
-sh_test(
-    name = "single_file_test",
-    srcs = [
-        "test.sh",
-    ],
-    data = [":tar"],
-)
+[
+    sh_test(
+        name = "single_file{}_test".format(suffix),
+        srcs = [
+            "test.sh",
+        ],
+        args = ["$(rootpath :tar{})".format(suffix)],
+        data = [
+            ":tar" + suffix,
+            "//dotnet/private/tests/publish:expect_no_symlinks.sh",
+        ],
+    )
+    for suffix in FILE_MODES
+]

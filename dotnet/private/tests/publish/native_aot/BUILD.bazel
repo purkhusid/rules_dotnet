@@ -2,6 +2,7 @@ load("@bazel_lib//lib:transitions.bzl", "platform_transition_binary")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_shell//shell:sh_test.bzl", "sh_test")
 load("//dotnet:defs.bzl", "publish_binary")
+load("//dotnet/private/tests/publish:file_modes.bzl", "FILE_MODES", "publish_directory")
 
 # The native link needs a C/C++ toolchain for the target platform, and Windows
 # goes through MSVC rather than the Unix driver these rules support.
@@ -10,39 +11,48 @@ _NOT_WINDOWS = select({
     "//conditions:default": [],
 })
 
-publish_binary(
-    name = "native_aot",
-    binary = "//dotnet/private/tests/publish/app_to_publish",
-    native_aot = True,
-    self_contained = True,
-    target_compatible_with = _NOT_WINDOWS,
-    target_framework = "net10.0",
-)
+[
+    publish_binary(
+        name = "native_aot" + suffix,
+        binary = "//dotnet/private/tests/publish/app_to_publish",
+        file_mode = file_mode,
+        native_aot = True,
+        self_contained = True,
+        target_compatible_with = _NOT_WINDOWS,
+        target_framework = "net10.0",
+    )
+    for (suffix, file_mode) in FILE_MODES.items()
+]
 
 # Tarring strips the path prefix, and checks that the publish output can be
 # packaged at all.
-pkg_tar(
-    name = "tar",
-    srcs = [":native_aot"],
-    include_runfiles = True,
-    mode = "0755",
-    package_dir = "/",
-    strip_prefix = select({
-        "//dotnet/private:linux-arm64": "native_aot/aot/linux-arm64",
-        "//dotnet/private:linux-x64": "native_aot/aot/linux-x64",
-        "//dotnet/private:osx-arm64": "native_aot/aot/osx-arm64",
-        "//dotnet/private:osx-x64": "native_aot/aot/osx-x64",
-    }),
-    target_compatible_with = _NOT_WINDOWS,
-)
+[
+    pkg_tar(
+        name = "tar" + suffix,
+        srcs = [":native_aot" + suffix],
+        include_runfiles = True,
+        mode = "0755",
+        package_dir = "/",
+        strip_prefix = publish_directory("native_aot" + suffix, subdirectory = "aot", windows = False),
+        target_compatible_with = _NOT_WINDOWS,
+    )
+    for suffix in FILE_MODES
+]
 
-sh_test(
-    name = "native_aot_test",
-    size = "small",
-    srcs = ["test.sh"],
-    data = [":tar"],
-    target_compatible_with = _NOT_WINDOWS,
-)
+[
+    sh_test(
+        name = "native_aot{}_test".format(suffix),
+        size = "small",
+        srcs = ["test.sh"],
+        args = ["$(rootpath :tar{})".format(suffix)],
+        data = [
+            ":tar" + suffix,
+            "//dotnet/private/tests/publish:expect_no_symlinks.sh",
+        ],
+        target_compatible_with = _NOT_WINDOWS,
+    )
+    for suffix in FILE_MODES
+]
 
 # Cross-compiling proves the two halves are configured independently: ilc runs
 # on the execution platform while the framework, the static libraries and the
