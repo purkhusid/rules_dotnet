@@ -191,6 +191,10 @@ DotnetRuntimePackInfo = provider(
         "runtime_identifier": "string: The runtime identifier of the runtime pack",
         "assembly_runtime_infos": "list[DotnetAssemblyRuntimeInfo]: The runtime infos of the assemblies in the targeting pack",
         "nuget_infos": "list[NuGetInfo]: The NuGet infos of the assemblies in the targeting pack",
+        "layer": """struct | None: The packs laid out as the runtime layer of a self-contained publish, built once for every publish that ships them whole.
+
+`directory` is the layer, holding each file of `files`, a dict of the path it takes to the File, at that path.
+None when no .NET toolchain resolves for the pack, which is then never published.""",
     },
 )
 

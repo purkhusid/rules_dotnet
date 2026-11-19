@@ -82,6 +82,7 @@ load(
 )
 load(
     "//dotnet/private/rules/publish_binary:publish_binary.bzl",
+    _dotnet_runtime_layer = "dotnet_runtime_layer",
     _publish_binary = "publish_binary",
 )
 load(
@@ -170,6 +171,7 @@ def fsharp_test(name, **kwargs):
 csharp_nunit_test = _csharp_nunit_test
 fsharp_nunit_test = _fsharp_nunit_test
 publish_binary = _publish_binary
+dotnet_runtime_layer = _dotnet_runtime_layer
 blazor_devserver = _blazor_devserver
 import_library = _import_library
 import_dll = _import_dll

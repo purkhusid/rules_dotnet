@@ -3,8 +3,8 @@
 load("@rules_testing//lib:analysis_test.bzl", "analysis_test", "test_suite")
 load("@rules_testing//lib:truth.bzl", "matching")
 load("@rules_testing//lib:util.bzl", "TestingAspectInfo")
-load("//dotnet:defs.bzl", "publish_binary")
-load("//dotnet/private:providers.bzl", "DotnetNativeToolsInfo")
+load("//dotnet:defs.bzl", "dotnet_runtime_layer", "publish_binary")
+load("//dotnet/private:providers.bzl", "DotnetBinaryInfo", "DotnetNativeToolsInfo")
 load("//dotnet/private/tests:utils.bzl", "published_binary", "ready_to_run_images_below")
 
 LAYERS = ["runtime", "third_party", "first_party", "app"]
@@ -30,15 +30,35 @@ def _copied(target, action):
 
     return [file for file in action.inputs.to_list() if not file.short_path.startswith(script_prefix)]
 
+def _shared_runtime_layer(target):
+    """The runtime pack's own layer, if the publish's runtime layer is it."""
+    runtime_pack_info = published_binary(target)[DotnetBinaryInfo].runtime_pack_info
+    layer = getattr(runtime_pack_info, "layer", None)
+
+    if layer and target[OutputGroupInfo].runtime_layer.to_list() == [layer.directory]:
+        return layer
+
+    return None
+
 def _layers(target):
     """The files each layer is copied from, keyed by layer."""
     root = "{}/{}/layers/".format(target.label.package, target.label.name)
 
-    return {
+    layers = {
         output.short_path.removeprefix(root): _copied(target, action)
         for action in _actions(target, ["DotnetPublishLayer"])
         for output in action.outputs.to_list()
     }
+
+    shared = _shared_runtime_layer(target)
+    if shared:
+        layers["runtime"] = shared.files.values()
+
+    return layers
+
+def _expect_runtime_layer_shared(env, target, shared):
+    """Whether the publish returns its runtime pack's layer instead of copying its own."""
+    env.expect.that_bool(_shared_runtime_layer(target) != None).equals(shared)
 
 def _publish_copy_outputs(target):
     return {
@@ -95,9 +115,11 @@ def _expect_layers_cover_the_publish(env, target):
     env.expect.that_collection(seen.keys()).contains_exactly([file.path for file in _published(target)])
     env.expect.that_str(seen.get(target[DefaultInfo].files_to_run.executable.path)).equals("app")
 
+    shared = _shared_runtime_layer(target)
+
     for layer in LAYERS:
         env.expect.that_target(target).output_group(layer + "_layer").contains_exactly([
-            "{}/{}/layers/{}".format(target.label.package, target.label.name, layer),
+            shared.directory.short_path if layer == "runtime" and shared else "{}/{}/layers/{}".format(target.label.package, target.label.name, layer),
         ])
 
 def _expect_layers_independent_of_the_publish_copy(env, target):
@@ -162,6 +184,7 @@ def _self_contained_test(name):
 
 def _self_contained_test_impl(env, target):
     _expect_layers_cover_the_publish(env, target)
+    _expect_runtime_layer_shared(env, target, shared = True)
     _expect_layers_independent_of_the_publish_copy(env, target)
     _expect_dependencies_layered(env, target, runtime = True)
 
@@ -180,6 +203,7 @@ def _framework_dependent_test(name):
 
 def _framework_dependent_test_impl(env, target):
     _expect_layers_cover_the_publish(env, target)
+    _expect_runtime_layer_shared(env, target, shared = False)
     _expect_layers_independent_of_the_publish_copy(env, target)
     _expect_dependencies_layered(env, target, runtime = False)
 
@@ -215,6 +239,7 @@ def _compile_inputs(target):
 
 def _ready_to_run_test_impl(env, target):
     _expect_layers_cover_the_publish(env, target)
+    _expect_runtime_layer_shared(env, target, shared = True)
     _expect_layers_independent_of_the_publish_copy(env, target)
 
     # Each image is compiled in the target that defines its assembly, so that
@@ -303,6 +328,7 @@ def _ready_to_run_composite_test(name):
 
 def _ready_to_run_composite_test_impl(env, target):
     _expect_layers_cover_the_publish(env, target)
+    _expect_runtime_layer_shared(env, target, shared = False)
     _expect_layers_independent_of_the_publish_copy(env, target)
 
     # Each image stays in the layer of the assembly it replaces, while the
@@ -323,6 +349,7 @@ def _native_aot_test(name):
 
 def _native_aot_test_impl(env, target):
     _expect_layers_cover_the_publish(env, target)
+    _expect_runtime_layer_shared(env, target, shared = False)
     _expect_layers_independent_of_the_publish_copy(env, target)
 
     # The runtime and every assembly are compiled into the executable; only
@@ -343,6 +370,7 @@ def _single_file_test(name):
 
 def _single_file_test_impl(env, target):
     _expect_layers_cover_the_publish(env, target)
+    _expect_runtime_layer_shared(env, target, shared = False)
     _expect_layers_independent_of_the_publish_copy(env, target)
 
     # As for NativeAOT, the runtime and every assembly are in the executable,
@@ -444,12 +472,78 @@ def _data_test(name):
 
 def _data_test_impl(env, target):
     _expect_layers_cover_the_publish(env, target)
+    _expect_runtime_layer_shared(env, target, shared = True)
 
     # A data file lands in the layer of the target it belongs to.
     layers = _layers(target)
     env.expect.that_collection(_basenames(layers["first_party"])).contains_at_least(["data_lib.dll", "lib-data.txt"])
     env.expect.that_collection(_basenames(layers["app"])).contains_at_least(["data_app.dll", "app-data.txt"])
     env.expect.that_collection(layers["app"]).contains(_repo_mapping(target))
+
+
+def _shared_runtime_layer_test(name):
+    for (suffix, binary, kwargs) in [
+        ("_a", _APP, {}),
+        ("_b", ":data_app", {}),
+        ("_ready_to_run", _APP, {"ready_to_run": True}),
+    ]:
+        publish_binary(
+            name = name + suffix,
+            binary = binary,
+            self_contained = True,
+            tags = ["manual"],
+            target_framework = "net10.0",
+            **kwargs
+        )
+
+    dotnet_runtime_layer(
+        name = name + "_layer",
+        tags = ["manual"],
+        target_framework = "net10.0",
+    )
+
+    analysis_test(
+        name = name,
+        impl = _shared_runtime_layer_test_impl,
+        targets = {
+            "a": name + "_a",
+            "b": name + "_b",
+            "layer": name + "_layer",
+            "ready_to_run": name + "_ready_to_run",
+        },
+    )
+
+def _shared_runtime_layer_test_impl(env, targets):
+    # Self-contained publishes of the same runtime share one runtime layer,
+    # whichever application they publish and however they compile it, and it
+    # is the one `dotnet_runtime_layer` names, so that one image layer can be
+    # packed from it for all of them.
+    layer = targets.layer[DefaultInfo].files.to_list()
+
+    env.expect.that_collection(layer).has_size(1)
+
+    for target in [targets.a, targets.b, targets.ready_to_run]:
+        env.expect.that_collection(target[OutputGroupInfo].runtime_layer.to_list()).contains_exactly(layer)
+
+        # And no publish copies a runtime layer of its own.
+        for action in _actions(target, ["DotnetPublishLayer"]):
+            for output in action.outputs.to_list():
+                env.expect.that_str(output.basename).not_equals("runtime")
+
+def _overridden_runtime_assembly_test(name):
+    _publish_test(name, _overridden_runtime_assembly_test_impl, binary = ":overriding_app", self_contained = True)
+
+def _overridden_runtime_assembly_test_impl(env, target):
+    _expect_layers_cover_the_publish(env, target)
+    _expect_runtime_layer_shared(env, target, shared = False)
+
+    # A dependency newer than the runtime's own assembly takes its place, so
+    # the publish's runtime is not its pack's whole, and the publish lays it
+    # out itself.
+    layers = _layers(target)
+    env.expect.that_collection(_basenames(layers["runtime"])).contains("System.Private.CoreLib.dll")
+    env.expect.that_collection(_basenames(layers["runtime"])).not_contains("System.Formats.Asn1.dll")
+    env.expect.that_collection(_basenames(layers["third_party"])).contains("System.Formats.Asn1.dll")
 
 def container_layers_test_suite(name):
     test_suite(
@@ -467,5 +561,7 @@ def container_layers_test_suite(name):
             _native_aot_needs_net10_test,
             _binary_dependency_test,
             _data_test,
+            _shared_runtime_layer_test,
+            _overridden_runtime_assembly_test,
         ],
     )

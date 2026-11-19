@@ -35,6 +35,15 @@ csharp_binary(
     deps = ["//tools/runfiles"],
 )
 
+# Carries a newer System.Formats.Asn1 than the net8.0 runtime pack, so a
+# self-contained publish of it ships the package's in place of the pack's.
+csharp_binary(
+    name = "overriding_app",
+    srcs = ["OverridingApp.cs"],
+    target_frameworks = ["net8.0"],
+    deps = ["@paket.rules_dotnet_framework_override_not_provided_tests//system.formats.asn1"],
+)
+
 # Depends on another binary, which a publish of it ships as a library.
 csharp_binary(
     name = "uses_net9_app",

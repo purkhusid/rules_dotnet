@@ -305,11 +305,46 @@ which produces a single executable already.
 The output from `publish_binary` can easily be used to build container images.
 See the [container image example](../examples/container_image) for how to do this with `rules_img`.
 
+### Sharing the runtime layer
+
+The `runtime_layer` output group of a self-contained publish is built once for
+every publish of the same framework and runtime identifier, not once per
+publish. `dotnet_runtime_layer` names that same directory, so that one image
+layer packed from it can serve every image instead of each image packing its
+own copy of the runtime:
+
+```python
+load("@rules_dotnet//dotnet:defs.bzl", "dotnet_runtime_layer")
+load("@rules_img//img:layer.bzl", "image_layer")
+
+dotnet_runtime_layer(
+    name = "net10_runtime",
+    target_framework = "net10.0",
+    # Defaults to the platform being built for, as publish_binary's does.
+    runtime_identifier = "linux-x64",
+)
+
+image_layer(
+    name = "runtime_layer",
+    srcs = {"/app": ":net10_runtime"},
+)
+
+# Every image_manifest lists `:runtime_layer`, followed by the third_party,
+# first_party and app layers of its own publish.
+```
+
+A publish keeps a runtime layer of its own when it ships something other than
+the whole runtime pack: when a dependency carries a newer version of one of the
+runtime's assemblies, which then takes the place of the runtime's, or when it
+compiles a composite ReadyToRun image. Pack its own `runtime_layer` output
+group for those.
+
 ## Publish disk usage
 
 Every `publish_binary` copies everything it publishes into its own directory:
 the runtime pack of a self-contained publish, every NuGet package and every
-library. Its container layers are a second copy. A repository with many
+library. Its container layers are a second copy, apart from the runtime layer,
+which [publishes share](#sharing-the-runtime-layer). A repository with many
 publishes therefore holds many copies of the same files.
 `--@rules_dotnet//dotnet/settings:publish_file_mode` chooses how files get there:
 

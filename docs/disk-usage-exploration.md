@@ -14,9 +14,16 @@ On a small synthetic monorepo (8 apps, 30 publishes), `bazel-out` drops from
 copying them. Without the single-file bundles, which can't be deduplicated, it
 drops from **1.9 GB to 97 MB** (-95%). Every published app still runs.
 
-The prototype is on branch `claude/rules-dotnet-disk-usage-9gx36t` as a new flag
-`--@rules_dotnet//dotnet/settings:publish_file_mode=copy|hardlink|symlink`
-(the default `copy` keeps today's behaviour).
+The prototype is on branch `claude/rules-dotnet-disk-usage-9gx36t` and has two
+parts:
+
+- A new flag
+  `--@rules_dotnet//dotnet/settings:publish_file_mode=copy|hardlink|symlink`.
+  The default `copy` keeps today's behaviour.
+- One runtime layer shared by every self-contained publish of the same runtime
+  pack, plus a `dotnet_runtime_layer` rule that names it. This is on whatever
+  the flag says, and needs no links at all. See
+  [Shared runtime layer](#shared-runtime-layer).
 
 ## Where the duplicates come from
 
@@ -126,16 +133,9 @@ tests that stack the layers into a filesystem and run the app pass in every mode
    it works for local, remote and BwoB builds. This is most of the win. Ship it
    behind the flag first, then consider making it the default with a release
    note (`cp -rL`).
-2. **Layers: share the runtime layer rather than link it.** The `runtime` layer
-   (~76 MB) is ~80% of the layer bytes, and it's identical for every
-   self-contained publish of the same runtime pack. A user dependency that
-   overrides a runtime assembly, or a composite ReadyToRun image, changes it, so
-   those cases would keep the per-publish layer. Build it once, as an output of
-   the runtime pack target or of a target keyed on pack + RID, and every publish
-   can return that same tree artifact. That turns N × 76 MB into 1 × 76 MB under
-   any execution mode, with no hard-link caveats, and the OCI layer digest is
-   shared for free. Keep `hardlink` as an opt-in for the third-party/first-party
-   layers and local builds.
+2. **Share the runtime layer rather than link it** (prototyped, see below). Keep
+   `hardlink` as an opt-in for the third-party and first-party layers on local
+   builds.
 3. **Smaller follow-ups:**
    - Stamp and bundle the single-file host in one action. That saves the
      ~11.8 MB `bundle/<rid>/<app>` intermediate per single-file publish.
@@ -147,6 +147,70 @@ tests that stack the layers into a filesystem and run the app pass in every mode
      output directory per RID. Path mapping already shares the cache key, but
      not the disk or the local work. This is a bigger change, because
      `select()`s on `rid_compatible_*` have to keep working.
+
+## Shared runtime layer
+
+The `runtime` layer (~76 MB) is ~80% of the layer bytes. It's identical for
+every self-contained publish of the same runtime pack, so the prototype builds
+it once.
+
+**How it works.** Every binary already reaches its runtime pack through
+`runtime_pack_transition`. That transition keeps the framework and RID and
+resets the ReadyToRun and publish settings. So all publishes of one framework,
+RID and project SDK see the same configured `runtime_pack` target, ReadyToRun
+publishes included.
+
+- `runtime_pack` lays the pack out once as a `layer` directory, using the copy
+  script now shared from `dotnet/private/rules/common/copy_script.bzl`. It
+  returns the directory and its file list on `DotnetRuntimePackInfo.layer`.
+- `_publish_layers` compares its own runtime layer, path by path, with the
+  pack's file list. If they match, it returns the pack's directory as its
+  `runtime_layer` output group and declares no copy action.
+- Otherwise it copies its own layer as before. That happens when a dependency
+  carries a newer version of one of the runtime's assemblies, which then takes
+  that assembly's place, or with composite ReadyToRun, single-file and
+  NativeAOT publishes. The comparison catches all of these, with no list of
+  special cases to keep in sync.
+- `dotnet_runtime_layer(target_framework, runtime_identifier, project_sdk)`
+  goes through the same transitions and returns the same directory. That gives
+  users one target to pack into one `image_layer` that every image reuses.
+  Sharing the directory alone doesn't stop rules_img from packing one tarball
+  per `image_layer` target.
+
+**Results** (bench B):
+
+- In `copy` mode, `bazel-out` goes from 2.7 GB to 2.2 GB, and per-publish layer
+  copies from 764 MB to 128 MB plus one 76 MB shared runtime layer.
+- In `symlink` mode nothing changes (526 MB), because the layers there were
+  already hard links.
+- `bazel cquery` shows the eight self-contained publishes, four ReadyToRun
+  publishes and `dotnet_runtime_layer` all returning the same
+  `.../dotnet.runtime_packs/default/net9.0/linux-x64/layer`.
+
+**Tests.** The `container_layers` analysis tests now accept the shared layer,
+and say for each kind of publish whether it shares. Two tests are new:
+
+- `shared_runtime_layer_test`: two applications, a ReadyToRun publish and
+  `dotnet_runtime_layer` return one directory, and no publish copies a runtime
+  layer of its own.
+- `overridden_runtime_assembly_test`: a net8.0 app depending on
+  `System.Formats.Asn1 10.0.5` keeps its own runtime layer without the pack's
+  `System.Formats.Asn1.dll`. The package's copy is in `third_party`.
+
+The shell tests that stack the rules_img tarballs and run the app still pass.
+They were cache hits: the tarball packed from the shared directory is
+byte-identical to the one packed from the per-publish copy.
+
+**Trade-offs:**
+
+- The `runtime_layer` output group now points into the runtime pack's external
+  repository instead of `<name>/layers/runtime`. rules_img doesn't care, but a
+  tool that expected the old path would.
+- Every `runtime_pack` now resolves the .NET toolchain to know which copy
+  script to write. It's optional, so a pack no toolchain runs on, like the
+  browser's, simply has no layer.
+- Sharing holds only while the configurations match. A user transition that
+  splits a binary's configuration splits its runtime layer too.
 
 ## Appendix: reproducing
 
@@ -182,7 +246,7 @@ System.Console.WriteLine(DiskBench.LibB.Greet("APPNAME"));
 `BUILD.bazel`:
 
 ```python
-load("@rules_dotnet//dotnet:defs.bzl", "csharp_binary", "csharp_library", "publish_binary")
+load("@rules_dotnet//dotnet:defs.bzl", "csharp_binary", "csharp_library", "dotnet_runtime_layer", "publish_binary")
 
 csharp_library(name = "lib_a", srcs = ["LibA.cs"], target_frameworks = ["net9.0"],
     deps = ["@paket.example_deps//microsoft.codeanalysis.common",
@@ -205,6 +269,8 @@ APPS = ["app%d" % i for i in range(8)]
                 target_framework = "net9.0") for a in APPS[:4]]
 [publish_binary(name = a + "_r2r", binary = a, ready_to_run = True, self_contained = True,
                 target_framework = "net9.0") for a in APPS[:4]]
+[filegroup(name = a + "_r2r_runtime", srcs = [a + "_r2r"], output_group = "runtime_layer") for a in APPS[:4]]
+dotnet_runtime_layer(name = "net9_runtime", target_framework = "net9.0")
 ```
 
 ```bash

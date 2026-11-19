@@ -4,7 +4,6 @@ Rule for assembling the publish output of a .NET binary.
 
 load("@bazel_skylib//lib:dicts.bzl", "dicts")
 load("@bazel_skylib//lib:paths.bzl", "paths")
-load("@bazel_skylib//lib:shell.bzl", "shell")
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 load("@rules_cc//cc:action_names.bzl", "CPP_LINK_EXECUTABLE_ACTION_NAME")
 load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
@@ -15,6 +14,7 @@ load(
     "DotnetAssemblyRuntimeInfo",
     "DotnetBinaryInfo",
     "DotnetNativeToolsInfo",
+    "DotnetRuntimePackInfo",
 )
 load(
     "//dotnet/private/rules/blazor:blazor_wasm_publish.bzl",
@@ -27,6 +27,7 @@ load(
     "TRIM_MODES",
     "TRIM_MODE_DOC",
 )
+load("//dotnet/private/rules/common:copy_script.bzl", "run_copy_script")
 load(
     "//dotnet/private/rules/common:publish_layout.bzl",
     "collect_assembly_files",
@@ -41,109 +42,9 @@ load(
     "ready_to_run_framework",
     "ready_to_run_references",
 )
-load("//dotnet/private/sdk:packs.bzl", "WASM_RID")
+load("//dotnet/private/sdk:packs.bzl", "USER_PROJECT_SDKS", "WASM_RID")
+load("//dotnet/private/sdk/runtime_packs:runtime_pack_transition.bzl", "runtime_pack_transition")
 load("//dotnet/private/transitions:tfm_transition.bzl", "publish_binary_transition", "tfm_transition")
-
-# How many sources one `cp` invocation takes. A self-contained publish copies
-# several hundred files into one directory, and the point of batching is lost if
-# the command line grows long enough to risk the execve argument limit.
-_COPY_BATCH = 128
-
-# Hard links a batch of files into a directory, copying them instead where the
-# filesystem cannot link them: across devices, as with a sandbox on tmpfs, or
-# on a filesystem without hard links. `-L` links what an input symlink points
-# at, never the symlink a sandbox stages the input as. A batch that fails part
-# way is copied whole, so whatever it linked is removed first: `cp` refuses to
-# copy a file onto a link to itself.
-_HARDLINK_FUNCTIONS = [
-    "place() {",
-    "  local dir=\"$1\" src",
-    "  shift",
-    "  ln -fL -- \"$@\" \"$dir\" 2>/dev/null && return 0",
-    "  for src in \"$@\"; do rm -f -- \"$dir/${src##*/}\"; done",
-    "  cp -f -- \"$@\" \"$dir\"",
-    "}",
-    "place_as() {",
-    "  ln -fL -- \"$1\" \"$2\" 2>/dev/null && return 0",
-    "  rm -f -- \"$2\"",
-    "  cp -f -- \"$1\" \"$2\"",
-    "}",
-]
-
-def _render_copy_script(copies, is_windows, directories = [], hardlink = False):
-    """The script that puts every published file in its place.
-
-    A self-contained publish copies the whole runtime pack, so one process per
-    file - and a second one to create its directory - dominates the action.
-    Each directory is created once instead, and the files that keep their name
-    are copied in batches.
-
-    Args:
-        copies: The (source, destination path) pairs to copy, one pair per destination.
-        is_windows: Whether the script is a batch file rather than a shell script.
-        directories: Directories to create even when no file lands in them.
-        hardlink: Whether to hard link the files where the filesystem allows,
-            rather than copy them. Ignored on Windows.
-
-    Returns:
-        A list of script lines.
-    """
-    script_body = ["@echo off"] if is_windows else ["#! /usr/bin/env bash", "set -eou pipefail"]
-    hardlink = hardlink and not is_windows
-
-    if hardlink:
-        script_body.extend(_HARDLINK_FUNCTIONS)
-
-    # Grouped by destination directory, in first-seen order. A file published
-    # under a different name cannot join a batch, but its directory is still
-    # created along with the rest.
-    same_name = {directory: [] for directory in directories}
-    renamed = []
-
-    for (src, dst) in copies:
-        same_name.setdefault(paths.dirname(dst), [])
-        if src.basename == paths.basename(dst):
-            same_name[paths.dirname(dst)].append(src)
-        else:
-            renamed.append((src, dst))
-
-    for (directory, sources) in same_name.items():
-        if is_windows:
-            script_body.append("if not exist \"{dir}\" @mkdir \"{dir}\" >NUL".format(dir = directory.replace("/", "\\")))
-
-            # `copy` concatenates when handed several sources, so only the
-            # directory creation is shared on Windows.
-            for src in sources:
-                script_body.append("@copy /Y \"{src}\" \"{dir}\" >NUL".format(
-                    src = src.path.replace("/", "\\"),
-                    dir = directory.replace("/", "\\"),
-                ))
-            continue
-
-        script_body.append("mkdir -p {dir}".format(dir = shell.quote(directory)))
-
-        for start in range(0, len(sources), _COPY_BATCH):
-            srcs = " ".join([shell.quote(src.path) for src in sources[start:start + _COPY_BATCH]])
-
-            if hardlink:
-                script_body.append("place {dir} {srcs}".format(srcs = srcs, dir = shell.quote(directory)))
-            else:
-                script_body.append("cp -f {srcs} {dir}".format(srcs = srcs, dir = shell.quote(directory)))
-
-    for (src, dst) in renamed:
-        if is_windows:
-            script_body.append("@copy /Y \"{src}\" \"{dst}\" >NUL".format(
-                src = src.path.replace("/", "\\"),
-                dst = dst.replace("/", "\\"),
-            ))
-        else:
-            script_body.append("{cmd} {src} {dst}".format(
-                cmd = "place_as" if hardlink else "cp -f",
-                src = shell.quote(src.path),
-                dst = shell.quote(dst),
-            ))
-
-    return script_body
 
 _NO_READY_TO_RUN = struct(replace = {}, extra = [])
 
@@ -579,7 +480,33 @@ def _runfiles_entries(ctx, executable, data, beside = []):
 
     return entries
 
-def _publish_layers(ctx, entries, dependency_layers):
+def _shared_runtime_layer(runtime_pack_info, copies):
+    """The runtime pack's own layer, if it holds exactly what this publish's would.
+
+    It does unless the publish leaves part of the pack out or replaces it: a
+    dependency newer than the pack's own assembly takes its place, and a
+    composite ReadyToRun image recompiles the framework.
+
+    Args:
+        runtime_pack_info: The DotnetRuntimePackInfo of a self-contained
+            publish, None otherwise.
+        copies: The (File, path) pairs of the publish's runtime layer.
+
+    Returns:
+        The layer's directory, or None.
+    """
+    layer = getattr(runtime_pack_info, "layer", None)
+
+    if layer == None or len(copies) != len(layer.files):
+        return None
+
+    for (file, path) in copies:
+        if layer.files.get(path) != file:
+            return None
+
+    return layer.directory
+
+def _publish_layers(ctx, entries, dependency_layers, runtime_pack_info = None):
     """Lays out each layer of a publish as a directory of its own.
 
     A directory lands wherever a packaging rule puts it, while files under
@@ -590,10 +517,16 @@ def _publish_layers(ctx, entries, dependency_layers):
     lists them sorted by path, so that it changes only when they do, not when
     a dependency elsewhere in the graph reorders them.
 
+    The runtime layer of a self-contained publish that ships its runtime pack
+    whole is the pack's own, which every such publish shares instead of
+    holding a copy.
+
     Args:
         ctx: The rule context.
         entries: The file each path in the layers holds.
         dependency_layers: The layer of each dependency's files, by path.
+        runtime_pack_info: The DotnetRuntimePackInfo of a self-contained
+            publish, whose layer the runtime layer may be.
 
     Returns:
         The directory of each layer, as its `<layer>_layer` output group.
@@ -605,9 +538,14 @@ def _publish_layers(ctx, entries, dependency_layers):
         layers[dependency_layers.get(file.path, "app")].append((file, path))
 
     output_groups = {}
+    shared = _shared_runtime_layer(runtime_pack_info, layers["runtime"])
 
     # One action per layer, which runs only when its output group is asked for.
     for (layer, copies) in layers.items():
+        if layer == "runtime" and shared:
+            output_groups["runtime_layer"] = depset([shared])
+            continue
+
         directory = ctx.actions.declare_directory("{}/layers/{}".format(ctx.label.name, layer))
 
         _run_copy_script(
@@ -792,47 +730,21 @@ def _run_copy_script(ctx, copies, suffix, mnemonic, progress_message, directory 
     Returns:
         The action's outputs.
     """
-
-    # The script runs on the machine building the publish, not the one the
-    # publish is for. Those differ whenever a publish cross-compiles, and a
-    # Windows machine cannot run the shell script a Linux target would pick.
-    # The toolchain is resolved for the execution platform, so it is what knows
-    # which machine that is.
-    is_windows = get_toolchain(ctx).dotnetinfo.os == "windows"
-
-    if directory:
-        # Created even when nothing lands in it, because a remote worker does
-        # not create a declared directory.
-        outputs = [directory]
-        directories = [directory.path]
-        pairs = [(src, "{}/{}".format(directory.path, dst)) for (src, dst) in copies]
-    else:
-        outputs = [dst for (_, dst) in copies]
-        directories = []
-        pairs = [(src, dst.path) for (src, dst) in copies]
-
-    script = ctx.actions.declare_file("{}.{}.{}".format(ctx.label.name, suffix, "bat" if is_windows else "sh"))
-
-    ctx.actions.write(
-        output = script,
-        content = ("\r\n" if is_windows else "\n").join(_render_copy_script(
-            pairs,
-            is_windows,
-            directories,
-            hardlink = _file_mode(ctx) != "copy",
-        )),
-        is_executable = True,
+    return run_copy_script(
+        ctx.actions,
+        "{}.{}".format(ctx.label.name, suffix),
+        copies,
+        mnemonic,
+        progress_message,
+        # The script runs on the machine building the publish, not the one the
+        # publish is for. Those differ whenever a publish cross-compiles, and a
+        # Windows machine cannot run the shell script a Linux target would
+        # pick. The toolchain is resolved for the execution platform, so it is
+        # what knows which machine that is.
+        is_windows = get_toolchain(ctx).dotnetinfo.os == "windows",
+        hardlink = _file_mode(ctx) != "copy",
+        directory = directory,
     )
-    ctx.actions.run(
-        executable = script,
-        inputs = depset([src for (src, _) in copies]),
-        outputs = outputs,
-        tools = [script],
-        mnemonic = mnemonic,
-        progress_message = progress_message,
-    )
-
-    return outputs
 
 def _copy_beside(ctx, executable, layout):
     """Copies files into the directory holding `executable`.
@@ -1254,6 +1166,7 @@ def _publish_binary_impl(ctx):
             _runfiles_entries(ctx, apphost_shim, assembly_files.data),
         ),
         _dependency_layers(transitive_runtime_deps, runtime_pack_info, ready_to_run),
+        runtime_pack_info,
     )
 
     return [
@@ -1282,6 +1195,8 @@ directory in its `<layer>_layer` output group. Stacked in this order they give
 the publish directory:
 
 * `runtime`: the runtime pack of a self-contained publish, empty otherwise.
+  Every publish that ships the same pack whole returns the same directory,
+  which `dotnet_runtime_layer` names too.
 * `third_party`: what the application's NuGet packages contribute.
 * `first_party`: the libraries built in this repository.
 * `app`: the application's assembly, apphost, `deps.json`,
@@ -1500,4 +1415,63 @@ no apphost and no runtime configuration.""",
         ),
     }),
     implementation = _publish_binary_macro_impl,
+)
+
+def _dotnet_runtime_layer_impl(ctx):
+    layer = ctx.attr._runtime_pack[0][DotnetRuntimePackInfo].layer
+
+    if layer == None:
+        fail("{}: no .NET toolchain runs on this execution platform to lay out the runtime of {} on {}.".format(
+            ctx.label,
+            ctx.attr.target_framework,
+            ctx.attr.runtime_identifier,
+        ))
+
+    return [DefaultInfo(files = depset([layer.directory]))]
+
+_dotnet_runtime_layer = rule(
+    _dotnet_runtime_layer_impl,
+    doc = """The runtime layer a self-contained `publish_binary` ships.
+
+The same directory as the `runtime_layer` output group of every self-contained
+publish for this framework and runtime identifier that ships its runtime pack
+whole. That holds unless a dependency carries a newer version of one of the
+runtime's assemblies, or the publish compiles a composite ReadyToRun image.
+Packing it into an image layer once lets every image share that layer instead
+of packing its own copy.""",
+    attrs = {
+        "target_framework": attr.string(
+            doc = "The target framework of the publishes whose runtime this is.",
+            mandatory = True,
+        ),
+        "runtime_identifier": attr.string(
+            doc = "The runtime identifier of the publishes whose runtime this is. " +
+                  "Defaults to the platform being built for, as `publish_binary`'s does.",
+        ),
+        "project_sdk": attr.string(
+            doc = "The project SDK of the binaries published, which decides " +
+                  "the runtime packs: `web` adds ASP.NET Core's.",
+            default = "default",
+            values = USER_PROJECT_SDKS,
+        ),
+        "_runtime_pack": attr.label(
+            default = "//dotnet/private/sdk/runtime_packs:runtime_pack",
+            cfg = runtime_pack_transition,
+        ),
+    },
+    # The same transitions a binary reaches its runtime pack through, so that
+    # this is the very directory the publishes return rather than a copy.
+    cfg = tfm_transition,
+)
+
+def _dotnet_runtime_layer_macro_impl(name, runtime_identifier, **kwargs):
+    _dotnet_runtime_layer(
+        name = name,
+        runtime_identifier = runtime_identifier if runtime_identifier != None else _TARGET_RID,
+        **kwargs
+    )
+
+dotnet_runtime_layer = macro(
+    inherit_attrs = _dotnet_runtime_layer,
+    implementation = _dotnet_runtime_layer_macro_impl,
 )
