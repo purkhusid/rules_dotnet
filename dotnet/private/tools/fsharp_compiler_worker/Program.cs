@@ -48,11 +48,30 @@ namespace FSharpCompilerWorker
             var persistent = Worker.TakeFlag(rest, "--persistent_worker");
 
             var inProcess = InProcessCompiler.TryCreate(compiler);
+            var stableRoot = StableSourceRoot.Find();
 
             int Compile(List<string> arguments, StringBuilder output)
             {
                 arguments = Worker.ResolveInputLinks(arguments, "-r:", "--reference:");
 
+                if (stableRoot == null)
+                {
+                    return CompileWithPathMap(arguments, output);
+                }
+
+                var compilerOutput = new StringBuilder();
+                try
+                {
+                    return CompileWithPathMap(StableSourceRoot.Apply(arguments, stableRoot), compilerOutput);
+                }
+                finally
+                {
+                    output.Append(StableSourceRoot.Unapply(compilerOutput.ToString(), stableRoot));
+                }
+            }
+
+            int CompileWithPathMap(List<string> arguments, StringBuilder output)
+            {
                 // A type provider's designer assembly is loaded into the default
                 // load context, which holds one assembly per simple name and cannot
                 // be unloaded. A second package carrying its own copy of a designer

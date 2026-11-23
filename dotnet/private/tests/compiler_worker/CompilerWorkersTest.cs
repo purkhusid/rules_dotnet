@@ -31,6 +31,7 @@ public class CompilerWorkersTest
     private string _fsc = "";
     private string _csharpWorker = "";
     private string _fsharpWorker = "";
+    private string _compilerWrapper = "";
     private string _sharedFramework = "";
     private string _directory = "";
     private readonly List<int> _servers = new();
@@ -59,6 +60,7 @@ public class CompilerWorkersTest
         _fsc = FromToolchain("FSC_BIN");
         _csharpWorker = WorkerDll("CSHARP_COMPILER_WORKER");
         _fsharpWorker = WorkerDll("FSHARP_COMPILER_WORKER");
+        _compilerWrapper = runfiles.Rlocation(Environment.GetEnvironmentVariable("COMPILER_WRAPPER_SH")!);
         _sharedFramework = Directory
             .GetDirectories(Path.Combine(Path.GetDirectoryName(_dotnet)!, "shared", "Microsoft.NETCore.App"))
             .OrderBy(directory => Version.Parse(Path.GetFileName(directory).Split('-')[0]))
@@ -183,6 +185,126 @@ public class CompilerWorkersTest
         // Assert
         Assert.That(exitCode, Is.EqualTo(1), output);
         Assert.That(output, Does.Contain("error FS0980"));
+    }
+
+    [Test]
+    public void AnFSharpCompileGivesTheSameAssemblyInAnyWorkingDirectory([Values] FSharpInvocation invocation)
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            Assert.Ignore("Only Linux has a name for the working directory that is the same in all of them.");
+        }
+
+        // Arrange: two execution roots of different lengths, holding the same source.
+        var roots = new[] { "execroot", Path.Combine("a", "much", "longer", "execroot") }
+            .Select(root => ExecutionRootWith(root, PathRecordingSource))
+            .ToArray();
+
+        // Act
+        var outputs = roots.Select(root => CompileRelative(root, invocation)).ToArray();
+
+        // Assert
+        Assert.That(outputs.Select(output => output.ExitCode), Is.EqualTo(new[] { 0, 0 }), string.Join("\n", outputs.Select(o => o.Output)));
+        foreach (var file in new[] { "Library.dll", "Library.pdb", Path.Combine("ref", "Library.dll") })
+        {
+            Assert.That(
+                File.ReadAllBytes(Path.Combine(roots[1], "out", file)),
+                Is.EqualTo(File.ReadAllBytes(Path.Combine(roots[0], "out", file))),
+                file);
+        }
+    }
+
+    [Test]
+    public void AnFSharpDiagnosticNamesItsSourceRelativeToTheWorkingDirectory([Values] FSharpInvocation invocation)
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            Assert.Ignore("fsc names a source by its full path where it is not given one under /proc/self/cwd.");
+        }
+
+        // Arrange
+        var root = ExecutionRootWith("execroot", PathRecordingSource);
+
+        // Act
+        var (exitCode, output) = CompileRelative(root, invocation);
+
+        // Assert
+        Assert.That(exitCode, Is.EqualTo(0), output);
+        Assert.That(output, Does.Match(@"(?m)^src/Library\.fs\(5,\d+\): warning FS0025"));
+    }
+
+    /// <summary>
+    /// The constructs fsc records the full path of a source file in, past its
+    /// pathmap: a quotation literal and an incomplete match.
+    /// </summary>
+    private const string PathRecordingSource =
+        "module Library\n" +
+        "let quoted = <@ fun (x: int) -> x + 1 @>\n" +
+        "[<ReflectedDefinition>]\n" +
+        "let reflected (x: int) = x + 1\n" +
+        "let incomplete (x: int option) = match x with Some y -> y\n";
+
+    private string ExecutionRootWith(string name, string source)
+    {
+        var root = Directory.CreateDirectory(Path.Combine(_directory, name)).FullName;
+        Directory.CreateDirectory(Path.Combine(root, "src"));
+        File.WriteAllText(Path.Combine(root, "src", "Library.fs"), source);
+        return root;
+    }
+
+    /// <summary>The ways an F# compile action runs the compiler.</summary>
+    public enum FSharpInvocation
+    {
+        PersistentWorker,
+        WorkerAsAPlainAction,
+        WrapperScript,
+    }
+
+    /// <summary>
+    /// Compiles <c>src/Library.fs</c> in <paramref name="root"/>, naming every
+    /// input and output relative to it as the rules do.
+    /// </summary>
+    private (int ExitCode, string Output) CompileRelative(string root, FSharpInvocation invocation)
+    {
+        var arguments = new List<string>
+        {
+            "--noframework",
+            "--nocopyfsharpcore",
+            "--deterministic+",
+            "--optimize+",
+            "--debug:portable",
+            "--target:library",
+            "--out:out/Library.dll",
+            "--pdb:out/Library.pdb",
+            "--refout:out/ref/Library.dll",
+            "-r:" + Path.Combine(Path.GetDirectoryName(Path.GetFullPath(_fsc))!, "FSharp.Core.dll"),
+        };
+        arguments.AddRange(Directory.GetFiles(_sharedFramework, "*.dll").Where(IsManaged).Select(assembly => "-r:" + assembly));
+        arguments.Add("src/Library.fs");
+
+        if (invocation == FSharpInvocation.PersistentWorker)
+        {
+            using var worker = WorkerProcess.Start(
+                _dotnet,
+                new[] { _fsharpWorker, _dotnet, _fsc, "--persistent_worker" },
+                root,
+                new Dictionary<string, string?>(),
+                WorkerEncoding.Json);
+            return worker.Send(arguments, ResponseTimeout);
+        }
+
+        var responseFile = Path.Combine(_directory, Path.GetRandomFileName() + ".rsp");
+        File.WriteAllLines(responseFile, arguments);
+        if (invocation == FSharpInvocation.WorkerAsAPlainAction)
+        {
+            return RunToCompletion(_dotnet, new[] { _fsharpWorker, _dotnet, _fsc, "@" + responseFile }, root);
+        }
+
+        // The script runs `./<dotnet>`, an execution path.
+        return RunToCompletion(
+            "bash",
+            new[] { _compilerWrapper, Path.GetRelativePath(root, _dotnet), _fsc, "@" + responseFile },
+            root);
     }
 
     /// <summary>

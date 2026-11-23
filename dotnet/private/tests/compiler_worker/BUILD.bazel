@@ -23,6 +23,16 @@ csharp_nunit_test(
 )
 
 csharp_nunit_test(
+    name = "stable_source_root",
+    size = "small",
+    srcs = [
+        "StableSourceRootTest.cs",
+        "//dotnet/private/tools/fsharp_compiler_worker:stable_source_root",
+    ],
+    target_frameworks = ["net10.0"],
+)
+
+csharp_nunit_test(
     name = "worker_loop",
     size = "small",
     srcs = [
@@ -43,10 +53,12 @@ csharp_nunit_test(
     ],
     data = [
         "//dotnet:resolved_toolchain",
+        "//dotnet/private:compiler_wrapper.sh",
         "//dotnet/private/tools/csharp_compiler_worker",
         "//dotnet/private/tools/fsharp_compiler_worker",
     ],
     envs = {
+        "COMPILER_WRAPPER_SH": "$(rlocationpath //dotnet/private:compiler_wrapper.sh)",
         "CSC_BIN": "$(CSC_BIN)",
         "CSHARP_COMPILER_WORKER": "$(rlocationpaths //dotnet/private/tools/csharp_compiler_worker)",
         "DOTNET_BIN": "$(DOTNET_BIN)",

@@ -7,8 +7,15 @@ compiler_worker_binary(
     name = "fsharp_compiler_worker",
     srcs = [
         "Program.cs",
+        "StableSourceRoot.cs",
         "//dotnet/private/tools/worker:srcs",
     ],
     target_frameworks = ["net10.0"],
     visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "stable_source_root",
+    srcs = ["StableSourceRoot.cs"],
+    visibility = ["//dotnet/private/tests/compiler_worker:__pkg__"],
 )

@@ -476,3 +476,19 @@ common --enable_platform_specific_config
 build:linux --experimental_output_paths=strip
 build:macos --experimental_output_paths=strip
 ```
+
+## Reproducible outputs
+
+A compile gives the same assembly wherever it runs: in any worker slot, in a sandbox, or on a
+remote executor. Both compilers resolve each source file against the working directory and embed
+the result, so the compile actions pass a pathmap that turns the working directory into `.`, and
+the PDB records `./src/...`.
+
+fsc also records full paths where its pathmap does not reach: the source location of a quotation
+literal (`<@ ... @>`, `[<ReflectedDefinition>]`), the location a
+`MatchFailureException` reports, and the room the debug directory reserves for the PDB path. On
+Linux the F# compile therefore names its inputs under `/proc/self/cwd`, which is the working
+directory under the same name everywhere, so those places read `/proc/self/cwd/src/...`.
+Diagnostics are printed relative to the execution root. macOS and Windows have no such name, and
+there an F# assembly with a quotation or an incomplete match still depends on where it was
+compiled.
