@@ -6,7 +6,7 @@ load(":tests.bzl", "dependencies_in_runfiles_test_suite")
 dependencies_in_runfiles_test_suite(name = "dependencies_in_runfiles_test_suite")
 
 # Built for a framework whose host cannot find files outside the publish
-# directory when it is self-contained.
+# directory.
 csharp_binary(
     name = "net9_app",
     srcs = ["Net9App.cs"],

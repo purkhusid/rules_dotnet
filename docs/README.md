@@ -432,11 +432,10 @@ builds no runfiles tree, nor where Bazel builds no runfiles trees at all
 (`--noenable_runfiles`, the default on Windows). A tree left over from an
 earlier build may be found instead, which can be out of date.
 
-A framework-dependent publish lists its dependencies as `runtimeTargets`, which
-every host looks for below the application's directory. A self-contained one
-lists them with a `localPath`, which only the host of .NET 10 and later reads,
-so it needs a binary built for .NET 10 or later. `dependencies_in_runfiles`
-cannot be combined with `single_file`, `native_aot` or `ready_to_run_composite`.
+The `deps.json` gives each asset a `localPath`, which only the host of .NET 10
+and later reads, so `dependencies_in_runfiles` needs a binary built for .NET 10
+or later. It cannot be combined with `single_file`, `native_aot` or
+`ready_to_run_composite`.
 
 ## .NET Framework
 

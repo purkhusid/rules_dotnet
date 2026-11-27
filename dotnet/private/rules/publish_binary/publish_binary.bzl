@@ -37,7 +37,6 @@ load(
     "LOCAL_PATH_MIN_MAJOR_VERSION",
     "host_libraries",
     "relocate_to_runfiles",
-    "supports_local_path",
 )
 load(
     "//dotnet/private/rules/ready_to_run:ready_to_run.bzl",
@@ -107,6 +106,16 @@ def _check_attributes(ctx):
     if (attr.include_native_libraries_for_self_extract or attr.enable_compression_in_single_file) and not attr.single_file:
         fail("include_native_libraries_for_self_extract and enable_compression_in_single_file require single_file")
 
+    # The host of the runtime the binary runs on is what finds the dependencies
+    # in the runfiles tree, and it runs on its own framework's or a later one.
+    if attr.dependencies_in_runfiles and tfm_version(binary_framework)[0] < LOCAL_PATH_MIN_MAJOR_VERSION:
+        fail("{}: dependencies_in_runfiles needs .NET {} or later, whose host can find files outside the publish directory, but {} is built for {}.".format(
+            ctx.label,
+            LOCAL_PATH_MIN_MAJOR_VERSION,
+            _binary(ctx).label,
+            binary_framework,
+        ))
+
     if attr.dependencies_in_runfiles and (attr.single_file or attr.native_aot):
         fail("dependencies_in_runfiles cannot be combined with {}: it leaves no dependencies beside the executable to keep in the runfiles".format(
             "single_file" if attr.single_file else "native_aot",
@@ -167,16 +176,6 @@ def _check_runtime(ctx, publish):
         fail("No runtime pack found for target framework {} and runtime identifier {}".format(
             ctx.attr.target_framework,
             ctx.attr.runtime_identifier or "<host>",
-        ))
-
-    # The runtime's host is what finds the dependencies in the runfiles tree.
-    if ctx.attr.dependencies_in_runfiles and publish.runtime_pack_info and not supports_local_path(publish.runtime_pack_info):
-        fail("{}: a self-contained publish with dependencies_in_runfiles needs the host of .NET {} or later, but {} is built for {}, whose host cannot find files outside the publish directory. Publish it framework-dependent, or build it for .NET {} or later.".format(
-            ctx.label,
-            LOCAL_PATH_MIN_MAJOR_VERSION,
-            binary,
-            publish.binary_framework,
-            LOCAL_PATH_MIN_MAJOR_VERSION,
         ))
 
     # Under strict framework references the runtime packs are those of the
@@ -307,15 +306,12 @@ def _managed_files(ctx, publish):
     # the executable starts, and the host libraries it loads, stay beside it.
     relocated = {}
     if ctx.attr.dependencies_in_runfiles:
-        binary_pack = publish.binary_info.runtime_pack_info
         relocation = relocate_to_runfiles(
             ctx,
             depsjson_struct,
             entries,
             executable = _executable(ctx, publish),
             runtime_identifier = publish.runtime_identifier,
-            rid = binary_pack.runtime_identifier if binary_pack else publish.runtime_identifier,
-            is_self_contained = ctx.attr.self_contained,
             beside = [publish.binary_info.dll.basename] + host_libraries(runtime_pack_files),
         )
         depsjson_struct = relocation.depsjson
@@ -1022,10 +1018,9 @@ as a data dependency of another target, whose runfiles tree it is not beside,
 nor where Bazel builds no runfiles trees (`--noenable_runfiles`, the default on
 Windows).
 
-A framework-dependent publish runs on any host. A self-contained one needs a
-binary built for .NET 10 or later, whose host reads `localPath` in the
-`deps.json`. Cannot be combined with `single_file`, `native_aot` or
-`ready_to_run_composite`.""",
+Needs a binary built for .NET 10 or later, whose host reads the `localPath`
+of each asset in the `deps.json`. Cannot be combined with `single_file`,
+`native_aot` or `ready_to_run_composite`.""",
             default = False,
         ),
         "_apphost_shimmer": attr.label(

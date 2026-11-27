@@ -54,6 +54,10 @@ def _rlocation_path(file):
     """Where `file` is in a runfiles tree."""
     return file.short_path.removeprefix("../") if file.short_path.startswith("../") else "_main/" + file.short_path
 
+def _runfile(target, basename):
+    """The runfile of the publish with this name."""
+    return [file for file in target[DefaultInfo].default_runfiles.files.to_list() if file.basename == basename][0]
+
 def _runfile_basenames(target):
     return [file.basename for file in target[DefaultInfo].default_runfiles.files.to_list()]
 
@@ -65,25 +69,26 @@ def _framework_dependent_test_impl(env, target):
     env.expect.that_collection([file.basename for file in _copied(target)]).contains_exactly(["app_to_publish.dll"])
     env.expect.that_collection(_runfile_basenames(target)).contains_at_least(["LibGit2Sharp.dll", "data-file"])
 
-    # Each dependency's assets are listed as runtime-specific, which is what
-    # every host probes for below the application's directory.
-    libgit2sharp = _library(target, "LibGit2Sharp/")
-    env.expect.that_dict(libgit2sharp["runtime"]).keys().contains_exactly([])
-    env.expect.that_collection(libgit2sharp["runtimeTargets"].keys()).contains_exactly_predicates([
-        matching.str_matches(_RUNFILES + "*/LibGit2Sharp.dll"),
-    ])
-    env.expect.that_str(libgit2sharp["runtimeTargets"].values()[0]["assetType"]).equals("runtime")
-
-    # A package's native libraries, and one built here.
-    targets = {path: asset for library in _libraries(target).values() for (path, asset) in library.get("runtimeTargets", {}).items()}
-    native = [path for (path, asset) in targets.items() if asset["assetType"] == "native"]
+    # Each asset is listed where a framework-dependent deps.json lists it, with
+    # where it is in the runfiles tree: a package's native libraries as
+    # runtime-specific, and one built here by name.
+    env.expect.that_str(_library(target, "LibGit2Sharp/")["runtime"]["LibGit2Sharp.dll"]["localPath"]).equals(
+        _RUNFILES + _rlocation_path(_runfile(target, "LibGit2Sharp.dll")),
+    )
+    native = [
+        asset["localPath"]
+        for library in _libraries(target).values()
+        for section in ["native", "runtimeTargets"]
+        for asset in library.get(section, {}).values()
+        if asset.get("assetType", "native") == "native"
+    ]
     env.expect.that_collection(native).contains_at_least_predicates([
         matching.str_matches(_RUNFILES + "*libgit2sharp.nativebinaries*/runtimes/*/native/*git2*"),
         matching.str_matches(_RUNFILES + "_main/dotnet/private/tests/publish/app_to_publish/*native*"),
     ])
 
     # The application's own assembly is beside the executable.
-    env.expect.that_collection(_library(target, "app_to_publish/")["runtime"].keys()).contains_exactly(["app_to_publish.dll"])
+    env.expect.that_dict(_library(target, "app_to_publish/")["runtime"]["app_to_publish.dll"]).keys().not_contains("localPath")
 
 def _self_contained_test(name):
     _publish_test(name, _self_contained_test_impl, self_contained = True)
@@ -162,10 +167,19 @@ def _not_with_ready_to_run_composite_test(name):
         self_contained = True,
     )
 
+def _needs_net10_test(name):
+    _publish_test(
+        name,
+        _expect_failure("dependencies_in_runfiles needs .NET 10 or later", ":net9_app is built for net9.0"),
+        binary = ":net9_app",
+        expect_failure = True,
+        target_framework = "net9.0",
+    )
+
 def _self_contained_needs_net10_test(name):
     _publish_test(
         name,
-        _expect_failure("needs the host of .NET 10 or later", ":net9_app is built for net9.0"),
+        _expect_failure("dependencies_in_runfiles needs .NET 10 or later", ":net9_app is built for net9.0"),
         binary = ":net9_app",
         expect_failure = True,
         self_contained = True,
@@ -182,6 +196,7 @@ def dependencies_in_runfiles_test_suite(name):
             _not_with_single_file_test,
             _not_with_native_aot_test,
             _not_with_ready_to_run_composite_test,
+            _needs_net10_test,
             _self_contained_needs_net10_test,
         ],
     )
