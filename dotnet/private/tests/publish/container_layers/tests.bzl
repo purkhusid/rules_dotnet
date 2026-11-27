@@ -433,6 +433,30 @@ def _binary_dependency_test_impl(env, targets):
     env.expect.that_collection(_compile_inputs(targets.ready_to_run).keys()).has_size(0)
     env.expect.that_str(_native_tools(targets.native_aot).ilcompiler.tool.path).contains("/net10.0/")
 
+def _dependencies_in_runfiles_test(name):
+    _publish_test(name, _dependencies_in_runfiles_test_impl, dependencies_in_runfiles = True, self_contained = True)
+
+def _dependencies_in_runfiles_test_impl(env, target):
+    # Left in the runfiles tree, the dependencies still land in the layers of
+    # their origin, only below the executable's runfiles tree.
+    _expect_layers_cover_the_publish(env, target)
+    _expect_layers_independent_of_the_publish_copy(env, target)
+    _expect_dependencies_layered(env, target, runtime = True)
+
+    # Beside the executable, only what the host loads from there.
+    env.expect.that_collection(_basenames(_layers(target)["runtime"])).contains_at_least_predicates([
+        matching.str_matches("*hostfxr*"),
+        matching.str_matches("*hostpolicy*"),
+    ])
+
+def _dependencies_in_runfiles_framework_dependent_test(name):
+    _publish_test(name, _dependencies_in_runfiles_framework_dependent_test_impl, dependencies_in_runfiles = True, self_contained = False)
+
+def _dependencies_in_runfiles_framework_dependent_test_impl(env, target):
+    _expect_layers_cover_the_publish(env, target)
+    _expect_layers_independent_of_the_publish_copy(env, target)
+    _expect_dependencies_layered(env, target, runtime = False)
+
 def _data_test(name):
     _publish_test(name, _data_test_impl, binary = ":data_app", self_contained = True)
 
@@ -461,5 +485,7 @@ def container_layers_test_suite(name):
             _native_aot_needs_net10_test,
             _binary_dependency_test,
             _data_test,
+            _dependencies_in_runfiles_test,
+            _dependencies_in_runfiles_framework_dependent_test,
         ],
     )

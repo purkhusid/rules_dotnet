@@ -33,6 +33,13 @@ load(
 load("//dotnet/private/rules/publish_binary:copy_script.bzl", "declare_like", "run_copy_script")
 load("//dotnet/private/rules/publish_binary:native_aot.bzl", "NATIVE_AOT_MIN_MAJOR_VERSION", "native_aot_executable")
 load(
+    "//dotnet/private/rules/publish_binary:runfiles_layout.bzl",
+    "LOCAL_PATH_MIN_MAJOR_VERSION",
+    "host_libraries",
+    "relocate_to_runfiles",
+    "supports_local_path",
+)
+load(
     "//dotnet/private/rules/ready_to_run:ready_to_run.bzl",
     "compile_ready_to_run",
     "crossgen2_args",
@@ -100,6 +107,16 @@ def _check_attributes(ctx):
     if (attr.include_native_libraries_for_self_extract or attr.enable_compression_in_single_file) and not attr.single_file:
         fail("include_native_libraries_for_self_extract and enable_compression_in_single_file require single_file")
 
+    if attr.dependencies_in_runfiles and (attr.single_file or attr.native_aot):
+        fail("dependencies_in_runfiles cannot be combined with {}: it leaves no dependencies beside the executable to keep in the runfiles".format(
+            "single_file" if attr.single_file else "native_aot",
+        ))
+
+    # A composite image covers the runtime too. Whether the runtime finds it,
+    # and its component images, outside the publish directory is untested.
+    if attr.dependencies_in_runfiles and attr.ready_to_run_composite:
+        fail("dependencies_in_runfiles cannot be combined with ready_to_run_composite")
+
     # The SDK refuses to trim Windows Forms and WPF, and NativeAOT trims.
     windows_only = _windows_only_frameworks(_binary(ctx)[DotnetBinaryInfo])
     if attr.native_aot and windows_only:
@@ -150,6 +167,16 @@ def _check_runtime(ctx, publish):
         fail("No runtime pack found for target framework {} and runtime identifier {}".format(
             ctx.attr.target_framework,
             ctx.attr.runtime_identifier or "<host>",
+        ))
+
+    # The runtime's host is what finds the dependencies in the runfiles tree.
+    if ctx.attr.dependencies_in_runfiles and publish.runtime_pack_info and not supports_local_path(publish.runtime_pack_info):
+        fail("{}: a self-contained publish with dependencies_in_runfiles needs the host of .NET {} or later, but {} is built for {}, whose host cannot find files outside the publish directory. Publish it framework-dependent, or build it for .NET {} or later.".format(
+            ctx.label,
+            LOCAL_PATH_MIN_MAJOR_VERSION,
+            binary,
+            publish.binary_framework,
+            LOCAL_PATH_MIN_MAJOR_VERSION,
         ))
 
     # Under strict framework references the runtime packs are those of the
@@ -230,8 +257,9 @@ def _managed_files(ctx, publish):
     Returns:
         A struct of the `depsjson` and `runtimeconfig` written for the publish,
         the `assembly_files` and `runtime_pack_files` it ships, their `layout`,
-        the `ready_to_run` images replacing assemblies, and the `layers` of the
-        dependencies' files.
+        the `ready_to_run` images replacing assemblies, the File each path of
+        the publish directory holds as `entries`, those of them `relocated` to
+        the runfiles tree, and the `layers` of the dependencies' files.
     """
 
     # A single-file publish bundles both, so they stay out of its directory.
@@ -246,7 +274,6 @@ def _managed_files(ctx, publish):
         publish.transitive_runtime_deps,
         publish.runtime_pack_info,
     )
-    ctx.actions.write(output = depsjson, content = json.encode(depsjson_struct))
 
     runtimeconfig = ctx.actions.declare_file("{}/{}.runtimeconfig.json".format(meta_dir, publish.assembly_info.name))
     ctx.actions.write(
@@ -273,6 +300,29 @@ def _managed_files(ctx, publish):
     if ctx.attr.ready_to_run:
         ready_to_run = _ready_to_run_images(ctx, publish, assembly_files, runtime_pack_files)
 
+    entries = _publish_entries(layout, ready_to_run)
+
+    # The deps.json describes the publish directory; left in the runfiles tree,
+    # the files it lists are described where they are instead. The assembly
+    # the executable starts, and the host libraries it loads, stay beside it.
+    relocated = {}
+    if ctx.attr.dependencies_in_runfiles:
+        binary_pack = publish.binary_info.runtime_pack_info
+        relocation = relocate_to_runfiles(
+            ctx,
+            depsjson_struct,
+            entries,
+            executable = _executable(ctx, publish),
+            runtime_identifier = publish.runtime_identifier,
+            rid = binary_pack.runtime_identifier if binary_pack else publish.runtime_identifier,
+            is_self_contained = ctx.attr.self_contained,
+            beside = [publish.binary_info.dll.basename] + host_libraries(runtime_pack_files),
+        )
+        depsjson_struct = relocation.depsjson
+        relocated = relocation.relocated
+
+    ctx.actions.write(output = depsjson, content = json.encode(depsjson_struct))
+
     return struct(
         depsjson = depsjson,
         runtimeconfig = runtimeconfig,
@@ -280,13 +330,30 @@ def _managed_files(ctx, publish):
         runtime_pack_files = runtime_pack_files,
         layout = layout,
         ready_to_run = ready_to_run,
+        entries = entries,
+        relocated = relocated,
         layers = _dependency_layers(publish.transitive_runtime_deps, publish.runtime_pack_info, ready_to_run),
     )
 
+def _publish_root(ctx, publish):
+    """The directory a framework-dependent or self-contained publish fills."""
+    return "{}/publish/{}".format(ctx.label.name, publish.runtime_identifier)
+
+def _executable(ctx, publish):
+    """The apphost of a framework-dependent or self-contained publish."""
+    return ctx.actions.declare_file("{}/{}".format(
+        _publish_root(ctx, publish),
+        _executable_name(publish.binary_info.dll, publish.runtime_identifier),
+    ))
+
 def _directory_publish(ctx, publish, managed):
-    """A framework-dependent or self-contained publish: a directory started by an apphost."""
-    root = "{}/publish/{}".format(ctx.label.name, publish.runtime_identifier)
-    entries = _publish_entries(managed.layout, managed.ready_to_run)
+    """A framework-dependent or self-contained publish: a directory started by an apphost.
+
+    With `dependencies_in_runfiles`, what the deps.json was pointed at in the
+    runfiles tree is not copied.
+    """
+    root = _publish_root(ctx, publish)
+    entries = {path: file for (path, file) in managed.entries.items() if path not in managed.relocated}
 
     published = run_copy_script(
         ctx,
@@ -297,7 +364,7 @@ def _directory_publish(ctx, publish, managed):
     )
     main_dll = ctx.actions.declare_file("{}/{}".format(root, publish.binary_info.dll.basename))
 
-    apphost = ctx.actions.declare_file(_executable_name(main_dll, publish.runtime_identifier), sibling = main_dll)
+    apphost = _executable(ctx, publish)
     _stamp_host(
         ctx,
         publish.binary_info.apphost_pack_info.apphost,
@@ -309,12 +376,18 @@ def _directory_publish(ctx, publish, managed):
         "Creating apphost shim for %{label}",
     )
 
+    # Data files are runfiles, not files at a relative path: the app resolves
+    # them with the runfiles library, and packaging has to carry runfiles along
+    # (`include_runfiles` on rules_pkg's `pkg_tar`, for one). So are the files
+    # the deps.json points at in the runfiles tree.
+    runfiles = managed.assembly_files.data + managed.relocated.values()
+
     output_groups = _publish_layers(
         ctx,
         dicts.add(
             entries,
             {file.basename: file for file in [apphost, managed.runtimeconfig, managed.depsjson]},
-            _runfiles_entries(ctx, apphost, managed.assembly_files.data),
+            _runfiles_entries(ctx, apphost, runfiles),
         ),
         managed.layers,
     )
@@ -323,11 +396,7 @@ def _directory_publish(ctx, publish, managed):
         DefaultInfo(
             executable = apphost,
             files = depset([apphost, main_dll, managed.runtimeconfig, managed.depsjson] + published),
-            # Data files are runfiles, not files at a relative path: the app
-            # resolves them with the runfiles library, and packaging has to
-            # carry runfiles along (`include_runfiles` on rules_pkg's
-            # `pkg_tar`, for one).
-            runfiles = ctx.runfiles(files = managed.assembly_files.data),
+            runfiles = ctx.runfiles(files = runfiles),
         ),
         OutputGroupInfo(**output_groups),
     ]
@@ -382,6 +451,7 @@ _NOT_FOR_NETFX = [
     "single_file",
     "include_native_libraries_for_self_extract",
     "enable_compression_in_single_file",
+    "dependencies_in_runfiles",
 ]
 
 def _netfx_publish(ctx):
@@ -935,6 +1005,29 @@ fetching the runtime packs of every shared framework. Unset, it follows
 by default.""",
             default = True,
         ),
+        "dependencies_in_runfiles": attr.bool(
+            doc = """Leave the application's dependencies in its runfiles tree rather than copying them into the publish directory.
+
+The `deps.json` points the .NET host at each assembly and native library, the
+application's and the runtime's, where it is in the runfiles tree beside the
+executable, so that publishing copies only what has to be in the application's
+directory: its own assembly, `deps.json`, `runtimeconfig.json`, app settings,
+content files and static web assets, and for a self-contained publish the host
+libraries the executable loads.
+
+The publish then runs only beside its runfiles tree: from `bazel run`, from
+`bazel-bin`, as the tool of an action, from its container layers, or packaged
+with its runfiles (`include_runfiles` on rules_pkg's `pkg_tar`). It cannot run
+as a data dependency of another target, whose runfiles tree it is not beside,
+nor where Bazel builds no runfiles trees (`--noenable_runfiles`, the default on
+Windows).
+
+A framework-dependent publish runs on any host. A self-contained one needs a
+binary built for .NET 10 or later, whose host reads `localPath` in the
+`deps.json`. Cannot be combined with `single_file`, `native_aot` or
+`ready_to_run_composite`.""",
+            default = False,
+        ),
         "_apphost_shimmer": attr.label(
             providers = [DotnetAssemblyCompileInfo, DotnetAssemblyRuntimeInfo],
             executable = True,
@@ -958,6 +1051,7 @@ _NOT_FOR_WASM = [
     "enable_compression_in_single_file",
     "roll_forward_behavior",
     "strict_framework_references",
+    "dependencies_in_runfiles",
 ]
 
 # Settings only a WebAssembly publish has, declared on the macro itself.
@@ -1073,6 +1167,10 @@ order they give the publish directory:
 
 Together they also hold the runfiles tree beside the executable, each data
 file in the layer of the target it belongs to.
+
+`dependencies_in_runfiles` leaves the dependencies in that runfiles tree rather
+than copying them into the publish directory, and points the `deps.json` at
+them there.
 
 A .NET Framework binary is published as its output directory, without PDBs.""",
     inherit_attrs = _publish_binary,

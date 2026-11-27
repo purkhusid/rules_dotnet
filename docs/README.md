@@ -395,6 +395,49 @@ Two attributes mirror the MSBuild properties of the same name:
 `single_file` needs `self_contained`, and cannot be combined with `native_aot`,
 which produces a single executable already.
 
+## Publishing without copying the dependencies
+
+A publish copies the application's dependencies, and for a self-contained one
+the runtime, into its directory. Hundreds of files are copied again whenever
+any of them changes. `publish_binary(dependencies_in_runfiles = True)` leaves
+them where Bazel already puts them, in the runfiles tree beside the
+executable, and writes a `deps.json` that points the .NET host at each one
+there:
+
+```python
+publish_binary(
+    name = "publish",
+    binary = ":app",
+    dependencies_in_runfiles = True,
+    self_contained = True,
+    target_framework = "net11.0",
+)
+```
+
+Only what has to be in the application's directory is copied: its own
+assembly, `deps.json`, `runtimeconfig.json`, app settings, content files and
+static web assets, and for a self-contained publish the host libraries
+(`hostfxr`, `hostpolicy`) the executable loads from beside itself.
+
+The host finds the runfiles tree beside the executable after resolving the
+executable's symlinks, so the publish runs where that tree is:
+
+- `bazel run`, and the executable in `bazel-bin` once built;
+- as the tool of an action;
+- from its container layers, which hold the runfiles tree;
+- packaged with its runfiles, such as by `pkg_tar` with `include_runfiles = True`.
+
+It does not run as a data dependency of another target, beside which Bazel
+builds no runfiles tree, nor where Bazel builds no runfiles trees at all
+(`--noenable_runfiles`, the default on Windows). A tree left over from an
+earlier build may be found instead, which can be out of date.
+
+A framework-dependent publish lists its dependencies as `runtimeTargets`, which
+every host looks for below the application's directory. A self-contained one
+lists them with a `localPath`, which only the host of .NET 10 and later reads,
+so it needs a binary built for .NET 10 or later. `dependencies_in_runfiles`
+cannot be combined with `single_file`, `native_aot` or `ready_to_run_composite`.
+
 ## .NET Framework
 
 Binaries and tests can target .NET Framework (`net48`, `net472`, ...). They

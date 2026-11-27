@@ -44,8 +44,11 @@ for mapping in "app/$executable.repo_mapping" "app/$executable.runfiles/_repo_ma
     fi
 
     # The rows of the publish's mapping whose source repository the binary's
-    # mapping has rows for too.
-    expected=$(awk -F, 'NR == FNR { sources[$1]; next } $1 in sources' "$stacked/$mapping" "$single/$mapping")
+    # mapping has rows for too. Only those to repositories the binary's maps to
+    # as well: a publish that leaves its dependencies in the runfiles tree also
+    # carries repositories only the .NET host reads, by their canonical names,
+    # such as a runtime pack's, and no code looks names up in them.
+    expected=$(awk -F, 'NR == FNR { sources[$1]; targets[$3]; next } ($1 in sources) && ($3 in targets)' "$stacked/$mapping" "$single/$mapping")
     missing=$(comm -13 <(sort "$stacked/$mapping") <(sort <<<"$expected"))
 
     if [[ -n "$missing" ]]; then

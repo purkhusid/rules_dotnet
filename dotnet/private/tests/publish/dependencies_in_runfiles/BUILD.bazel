@@ -1,0 +1,76 @@
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("@rules_shell//shell:sh_test.bzl", "sh_test")
+load("//dotnet:defs.bzl", "csharp_binary", "publish_binary")
+load(":tests.bzl", "dependencies_in_runfiles_test_suite")
+
+dependencies_in_runfiles_test_suite(name = "dependencies_in_runfiles_test_suite")
+
+# Built for a framework whose host cannot find files outside the publish
+# directory when it is self-contained.
+csharp_binary(
+    name = "net9_app",
+    srcs = ["Net9App.cs"],
+    target_frameworks = ["net9.0"],
+)
+
+# Each publish leaves its dependencies in the runfiles tree, is packed with that
+# tree as rules_pkg packs runfiles, and run from the package.
+PUBLISHES = [
+    "framework_dependent",
+    "self_contained",
+    "ready_to_run",
+]
+
+[
+    publish_binary(
+        name = publish,
+        binary = "//dotnet/private/tests/publish/app_to_publish",
+        dependencies_in_runfiles = True,
+        ready_to_run = publish == "ready_to_run",
+        # The toolchain's runtime is newer than the publish's framework.
+        roll_forward_behavior = "Major",
+        self_contained = publish != "framework_dependent",
+        target_framework = "net10.0",
+    )
+    for publish in PUBLISHES
+]
+
+# The tar strips the publish directory, so that it holds the executable beside
+# its runfiles tree, and avoids long paths on Windows.
+[
+    pkg_tar(
+        name = publish + "_tar",
+        srcs = [":" + publish],
+        include_runfiles = True,
+        mode = "0755",
+        package_dir = "/",
+        strip_prefix = select(
+            {
+                "//dotnet/private:linux-x64": publish + "/publish/linux-x64",
+                "//dotnet/private:linux-arm64": publish + "/publish/linux-arm64",
+                "//dotnet/private:osx-x64": publish + "/publish/osx-x64",
+                "//dotnet/private:osx-arm64": publish + "/publish/osx-arm64",
+                "//dotnet/private:windows-x64": publish + "/publish/win-x64",
+                "//dotnet/private:windows-arm64": publish + "/publish/win-arm64",
+            },
+        ),
+    )
+    for publish in PUBLISHES
+]
+
+[
+    sh_test(
+        name = publish + "_run_test",
+        srcs = ["test.sh"],
+        args = [
+            "$(rootpath :{}_tar)".format(publish),
+            "$(DOTNET_BIN)",
+        ],
+        data = [
+            ":{}_tar".format(publish),
+            "//dotnet:resolved_toolchain",
+        ],
+        toolchains = ["//dotnet:resolved_toolchain"],
+    )
+    for publish in PUBLISHES
+]

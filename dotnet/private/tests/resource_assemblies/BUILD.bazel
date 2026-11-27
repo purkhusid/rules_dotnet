@@ -51,3 +51,67 @@ diff_test(
     file1 = ":actual_publish",
     file2 = "expected_output",
 )
+
+# Left in the runfiles tree, the satellite assemblies are found below the
+# runfiles tree beside the executable. A self-contained publish points the host
+# at them with `localPath`, which needs .NET 10.
+csharp_binary(
+    name = "main_net10",
+    srcs = ["Main.cs"],
+    target_frameworks = ["net10.0"],
+    deps = [
+        "@paket.rules_dotnet_nuget_resource_assemblies_tests//humanizer.core",
+        "@paket.rules_dotnet_nuget_resource_assemblies_tests//humanizer.core.de",
+        "@paket.rules_dotnet_nuget_resource_assemblies_tests//humanizer.core.es",
+    ],
+)
+
+publish_binary(
+    name = "publish_main_in_runfiles",
+    binary = ":main_net10",
+    dependencies_in_runfiles = True,
+    self_contained = True,
+    target_framework = "net10.0",
+)
+
+run_binary(
+    name = "run_publish_main_in_runfiles",
+    outs = ["actual_publish_in_runfiles"],
+    args = ["$@"],
+    tool = ":publish_main_in_runfiles",
+)
+
+diff_test(
+    name = "diff_test_publish_main_in_runfiles",
+    file1 = ":actual_publish_in_runfiles",
+    file2 = "expected_output",
+)
+
+# A framework-dependent publish lists them as runtime-specific assets, which
+# any host finds below the application's directory.
+publish_binary(
+    name = "publish_main_framework_dependent_in_runfiles",
+    binary = ":main",
+    dependencies_in_runfiles = True,
+    # The toolchain's runtime is newer than the binary's framework.
+    roll_forward_behavior = "Major",
+    target_framework = "net9.0",
+)
+
+# Run on the toolchain's runtime.
+genrule(
+    name = "run_publish_main_framework_dependent_in_runfiles",
+    outs = ["actual_publish_framework_dependent_in_runfiles"],
+    cmd = "DOTNET_ROOT=\"$$(pwd)/$$(dirname $(DOTNET_BIN))\" $(execpath :publish_main_framework_dependent_in_runfiles) $@",
+    toolchains = ["//dotnet:resolved_toolchain"],
+    tools = [
+        ":publish_main_framework_dependent_in_runfiles",
+        "//dotnet:resolved_toolchain",
+    ],
+)
+
+diff_test(
+    name = "diff_test_publish_main_framework_dependent_in_runfiles",
+    file1 = ":actual_publish_framework_dependent_in_runfiles",
+    file2 = "expected_output",
+)

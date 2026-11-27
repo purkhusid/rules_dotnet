@@ -44,17 +44,20 @@ csharp_binary(
 )
 
 # Each publish is packed into image layers, which a test stacks and runs. The
-# NativeAOT one carries its sidecars as runfiles too.
+# NativeAOT one carries its sidecars as runfiles too, and the runfiles one its
+# dependencies.
 PUBLISHES = {
     "publish": "//dotnet/private/tests/publish/app_to_publish",
     "data_publish": ":data_app",
     "native_aot_publish": "//dotnet/private/tests/publish/app_to_publish",
+    "runfiles_publish": "//dotnet/private/tests/publish/app_to_publish",
 }
 
 [
     publish_binary(
         name = publish,
         binary = binary,
+        dependencies_in_runfiles = publish == "runfiles_publish",
         native_aot = publish == "native_aot_publish",
         self_contained = True,
         target_framework = "net10.0",
